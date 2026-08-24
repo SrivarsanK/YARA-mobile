@@ -1,0 +1,951 @@
+================================================================================
+FILE: Bus ETA Prediction – Methods, Trade-offs, and TransitSense Fit _ TransitSense – Literature Review.pdf (Pages: 7)
+================================================================================
+--- PAGE 1 ---
+This page summarizes practical research directions for bus ETA prediction and translates them into choices for 
+TransitSense.
+The main pattern across the literature is clear:
+Most ETA errors come from upstream issues:
+This means TransitSense should treat ETA as a system design problem:
+Overview
+Good ETA systems start with reliable route alignment and segment timing, not with fancy models 
+alone.
+1.
+Historical averages are simple but weak during traffic shifts and peak-hour variation.2.
+Statistical and ML models improve accuracy when they use segment travel time, dwell time, time-of-
+day, and route context.
+3.
+Deep models help most when there is enough historical data and a stable data pipeline.4.
+For a student MVP, the best choice is usually a strong GPS + route-segment baseline first, then a 
+deeper model as a stretch layer.
+5.
+Core sources reviewed
+BusTr: Predicting Bus Travel Times from Real-Time Traffic1.
+Bus Travel Time Prediction: A Lognormal Auto-Regressive (AR) Modeling Approach2.
+Predicting Bus Travel Time with Hybrid Incomplete Data – A Deep Learning Approach3.
+Bus Arrival Time Prediction via Hybrid LSTM Using GPS-Derived Run and Dwell Times4.
+How Chalo Achieved 75% Bus ETA Prediction Accuracy Across 20+ Cities with AI5.
+What the literature consistently says
+1. The problem is not just prediction — it is pipeline quality
+noisy GPS points,•
+low sampling rates,•
+poor route alignment,•
+stop dwell-time variability,•
+and missing data during network gaps.•
+capture location reliably,•
+snap the bus to the correct route segment,•
+estimate per-segment travel time,•
+adjust using current speed and recent segment conditions,•
+then present ETA with a freshness/confidence signal.•
+--- PAGE 2 ---
+Commonly useful inputs include:
+The strongest recurring insight is that run time + dwell time + time-of-day context are often enough to beat 
+naive baselines.
+Predict bus arrival using route geometry plus average time per route segment or stop-to-stop section.
+This is rarely the most accurate method, but it is often the best starting benchmark because it is interpretable 
+2. Useful features repeat across papers
+current GPS position,•
+bus speed,•
+route ID / trip ID,•
+stop sequence,•
+segment-level historical travel time,•
+dwell time at stops,•
+hour of day,•
+day of week,•
+traffic condition proxies,•
+and previous segment delays.•
+3. Data richness determines model choice
+If only GPS is available, statistical / simple ML approaches are often the safest starting point.•
+If route history and stop-level timing are available, ANN/LSTM/hybrid models become more useful.•
+If external traffic feeds exist, traffic-informed neural models can improve performance further.•
+Method families
+A. Historical / segment-average baseline
+Problem
+Data
+GPS location•
+route shape / ordered stops•
+historical travel time by segment•
+optional day/time buckets•
+Method
+Snap current bus location to the nearest valid route segment.•
+Compute remaining segments to a target stop.•
+Sum expected segment times using recent or bucketed historical averages.•
+Add a simple dwell-time allowance for important stops.•
+Results in practice
+--- PAGE 3 ---
+and easy to debug.
+Strong. Uses vehicle telemetry only; no personal data required.
+Low. A smartphone or low-cost GPS source is enough.
+Can run with intermittent connectivity if the bus device buffers positions locally and uploads later.
+Very strong as MVP baseline. It is simple, demoable, and gives a solid foundation for later ML improvements.
+Improve ETA by modeling how delays evolve over time instead of treating each segment independently.
+The Lognormal AR paper models travel time as a temporally correlated process and exploits the lognormal 
+behavior of travel times. Related work also uses Kalman-style updating to continuously revise predictions as new 
+observations arrive.
+These methods generally improve over static averages, especially when traffic conditions evolve smoothly.
+Strong. Still based mostly on vehicle telemetry.
+Low.
+Good for poor-network settings because updates can be computed centrally or from compact data streams.
+Good candidate for a refined MVP or a strong baseline-plus model. More realistic than jumping directly to 
+Constraints
+Weak during unusual congestion or incident days.•
+Sensitive to route-alignment errors.•
+Needs enough trip history to build stable averages.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+B. Statistical temporal models (AR / Kalman-style)
+Problem
+Data
+GPS-derived segment times•
+recent historical delay values•
+optionally route sections and time buckets•
+Method
+Results
+Constraints
+Better than simple averages, but still limited in capturing complex nonlinear patterns.•
+Needs careful route segmentation and stable preprocessing.•
+More mathematical tuning than the baseline.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+--- PAGE 4 ---
+heavy deep learning.
+Capture nonlinear travel-time behavior caused by stop dwell variability, peak-hour dynamics, and historical 
+pattern shifts.
+The Hybrid LSTM paper combines sequential features such as stop IDs, run times, and dwell times with 
+contextual inputs. The hybrid incomplete-data paper uses LSTM with incomplete data handling and additional 
+optimization.
+The reviewed LSTM approach reported strong errors (MAE about 13.4 seconds, MAPE about 10.32%, RMSE about 
+24.26 seconds in its study setting), showing that even a relatively simple sequence model can outperform weaker 
+baselines when the data pipeline is good.
+Still strong if only bus telemetry is used. Risk increases if passenger-linked data sources are introduced; avoid 
+storing any identifiable user data.
+Low to medium. Training is the heavier step; inference itself can still be lightweight.
+Inference can happen server-side after periodic uploads. Not ideal for fully bus-side offline inference in a first 
+MVP, but fine for a demo backend.
+Best as an innovation layer or stretch goal. Good for the pitch, but should sit on top of a simpler operational 
+baseline.
+C. ANN / LSTM / hybrid sequence models
+Problem
+Data
+GPS-derived run times•
+dwell times•
+stop IDs / sequence•
+time-of-day, day-of-week•
+route/trip context•
+sometimes ticketing / smart-card signals•
+Method
+Results
+Constraints
+Needs more historical data and cleaner preprocessing.•
+Harder to explain to judges unless the pipeline is clear.•
+Can silently fail if route alignment or dwell-time extraction is noisy.•
+Hybrid models that require smart-card or richer feeds may not match student demo constraints.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+D. Traffic-informed neural models
+--- PAGE 5 ---
+Predict bus delay even where direct transit telemetry is limited, by learning from road traffic patterns.
+BusTr learns to translate traffic conditions into bus travel-time predictions.
+The paper reports meaningful improvement over a strong neural baseline and shows practical value at large 
+scale.
+Good. It does not require passenger identity data.
+Medium on the system side because of data integration complexity.
+More network-dependent because external traffic data usually needs online access.
+Strong future enhancement, weak MVP fit. Excellent inspiration, but too dependent on external feeds for a first 
+demo.
+Choose a segment-based ETA engine with:
+Problem
+Data
+road traffic forecasts•
+historical bus delay data•
+route mapping to roadway context•
+Method
+Results
+Constraints
+Depends on access to traffic data or a proxy for traffic conditions.•
+Harder to reproduce in a hackathon unless traffic APIs are already available.•
+More infrastructure-heavy than a pure GPS pipeline.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+Comparison table
+Design principles for TransitSense
+Recommended baseline
+route alignment,1.
+per-segment historical travel times,2.
+time-of-day buckets,3.
+recent speed adjustment,4.
+optional dwell-time penalty for major stops.5.
+--- PAGE 6 ---
+This gives the best balance of:
+If time permits, add a small hybrid LSTM or ANN model as a comparison layer for the pitch:
+Build the MVP around a GPS + route-segment + historical travel-time ETA pipeline.
+Add AR/Kalman-style correction or a small LSTM comparison model.
+Do not depend on:
+feasibility,•
+explainability,•
+low hardware cost,•
+and poor-network tolerance.•
+Recommended advanced option
+baseline ETA vs ML ETA,•
+same inputs plus dwell-time history and time context,•
+show that the platform can evolve from heuristic to intelligent prediction.•
+Why this recommendation fits SIH
+It is student-buildable.•
+It avoids over-dependence on external traffic APIs.•
+It works with smartphone-grade GPS or low-cost GPS hardware.•
+It remains privacy-friendly because it needs only bus movement data.•
+It supports offline-first buffering when the network drops.•
+Constraints and risks to be explicit about
+Route alignment matters — poor snapping can ruin ETA even with a good model.1.
+Data volume matters — deep learning looks impressive, but weak history makes it unstable.2.
+Dwell-time variability matters — school zones, major stops, and peak hours need explicit handling.3.
+Prediction freshness matters — always show when the last bus update was received.4.
+Confidence matters — ETA should be presented as more/less reliable depending on update recency 
+and route certainty.
+5.
+TransitSense recommendation
+Default choice
+Add if time permits
+Avoid for first MVP
+smart-card integration,•
+expensive sensors,•
+or heavy online traffic-feed dependence.•
+--- PAGE 7 ---
+These are useful in the literature, but they are not the best first move for a fast SIH prototype.
+
+
+================================================================================
+FILE: Bus-Stop Kiosk Design – Methods, Trade-offs, and TransitSense Fit _ TransitSense – Literature Review.pdf (Pages: 6)
+================================================================================
+--- PAGE 1 ---
+This page reviews research and practical lessons on public-transport kiosks and stop-level information displays
+and translates them into a buildable TransitSense kiosk design.
+Across the literature, one theme repeats:
+Research on real-time passenger information consistently shows that passengers benefit when the system tells 
+them:
+A kiosk is valuable not because it is flashy, but because it reduces the psychological cost of waiting.
+The empirical evaluation literature shows that real-time systems can systematically under- or over-estimate 
+waiting times. Once users notice this, trust drops quickly.
+That means a good kiosk should never show ETA alone. It should also show:
+Overview
+Passengers value certainty and clarity more than feature richness.1.
+Real-time displays reduce anxiety and perceived waiting time.2.
+Trust collapses when predictions look precise but are stale or wrong.3.
+Interactive kiosks are useful, but only if placement and simplicity are right.4.
+Physical wayfinding and digital information must support each other.5.
+Core sources reviewed
+Real-time information systems for public transport: effects on customers1.
+Real-time bus arrival information system: an empirical evaluation2.
+Interactive Displays in Public Transport – Challenges and Expectations3.
+Implementation of Interactive Transit Information Kiosks at New York City Transit Facilities4.
+Mind the Gap: Navigating the Space Between Digital and Physical Wayfinding in Public Transit5.
+Note: Some sources were available mainly through abstracts or secondary summaries rather than full open-text 
+technical details. The conclusions below stay cautious and focus on consistent patterns across sources.
+What the literature consistently says
+1. The main job of a kiosk is to reduce uncertainty
+whether the bus is actually coming,•
+how long the wait is,•
+whether service is delayed,•
+and whether they should change behavior.•
+2. Accuracy without freshness is not enough
+last updated time,•
+--- PAGE 2 ---
+Interactive kiosk studies and public-display design work suggest that many passengers do not want to navigate 
+deep menus while waiting. They usually want a small number of answers immediately visible.
+For TransitSense, the stop kiosk should therefore prioritize:
+Interactive features can exist, but they should not be the core dependency.
+A well-designed interface still fails if passengers cannot spot or read it.
+Common practical lessons:
+The wayfinding literature emphasizes that digital guidance does not replace the physical environment.
+A kiosk works best when it clearly matches:
+This is especially important for first-time users.
+stale/live status,•
+and graceful fallback wording when predictions are uncertain.•
+3. Simpler displays usually win at stops
+next arriving buses, 1.
+ETA, 2.
+crowd level, 3.
+route direction / destination,4.
+service alert / unavailable-live-data message.5.
+4. Placement and visibility matter as much as UI
+keep the screen visible from typical waiting positions,•
+use large text readable in daylight,•
+avoid overloading the display,•
+separate critical live information from secondary guidance,•
+and make the stop identity unambiguous.•
+5. Digital and physical wayfinding must reinforce each other
+the stop name,•
+route numbers,•
+destination names,•
+direction of travel,•
+and nearby landmark cues.•
+Method / design families
+--- PAGE 3 ---
+Provide immediate next-bus information to all waiting passengers.
+A simple digital display continuously cycles or refreshes live arrival rows.
+This is the most robust and understandable type of kiosk. It supports glanceable use and does not require user 
+interaction.
+Very strong. No personal data required.
+Low to medium depending on display type.
+Can tolerate weak networks if the display caches last-known data and clearly marks staleness.
+Best MVP choice.
+Help users explore routes, destinations, and alternatives.
+Touchscreen kiosk with menu flows, map interaction, and search.
+A. Passive real-time arrival board
+Problem
+Data
+ETA feed•
+route / stop metadata•
+optional crowd status•
+service alerts•
+Method
+Results in practice
+Constraints
+Limited interaction depth.•
+Must keep screen uncluttered.•
+If ETAs are unreliable, the display can damage trust.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+B. Interactive trip-planning kiosk
+Problem
+Data
+route map•
+stop network•
+arrival feed•
+service alerts•
+nearby places / landmarks•
+Method
+Results in practice
+--- PAGE 4 ---
+Useful in large interchanges or unfamiliar systems, but adoption depends heavily on placement, signage, and 
+user awareness.
+Strong if it does not store personal queries.
+Medium.
+Needs local fallback pages to remain useful offline.
+Good future extension, weaker first MVP fit.
+Balance fast live information with limited wayfinding help.
+Default screen behaves like a passive arrival board. A simple tap or button can switch to:
+This is often the most balanced design because it preserves quick readability while still supporting deeper 
+guidance.
+Strong.
+Constraints
+More software complexity.•
+More screen-state design required.•
+Slower for users who only need a quick answer.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+C. Hybrid kiosk: glanceable board + simple interaction
+Problem
+Data
+ETA feed•
+occupancy feed•
+route / direction data•
+static route map•
+alerts•
+Method
+route map,•
+stop sequence,•
+nearby interchange guidance,•
+or service-status details.•
+Results in practice
+Constraints
+Needs disciplined screen hierarchy.•
+Interaction must be optional, not required.•
+Privacy stance
+Hardware cost level
+--- PAGE 5 ---
+Low to medium.
+Good if static assets are bundled locally and only live values depend on the network.
+Best overall design direction.
+The kiosk home screen should answer, at a glance:
+A strong default row could be:
+Allow optional access to:
+Connectivity assumptions
+Fit for TransitSense
+Comparison table
+Design principles for TransitSense
+Recommended default screen
+Which buses are coming next?1.
+How long until they arrive?2.
+How crowded are they?3.
+Is the live data fresh?4.
+12A → Central Station — 6 min — Moderate crowd•
+21C → Market Road — 11 min — Standing room•
+5B → Live update delayed — Last updated 2 min ago•
+Recommended secondary information
+route map,•
+stop sequence,•
+nearby interchange / transfer note,•
+simple landmark-based guidance,•
+service alerts.•
+Accessibility and readability rules
+Large, high-contrast text.•
+Avoid small dense maps on the home screen.•
+Use consistent route colors or symbols.•
+Keep route number and destination visually dominant.•
+Provide a clear stale-data state.•
+--- PAGE 6 ---
+Build a hybrid kiosk whose home screen behaves like a passive arrival board and whose deeper pages provide 
+only simple, optional wayfinding.
+Do not make the kiosk dependent on:
+These can be shown as extensions, but the MVP should stay focused and reliable.
+Constraints and risks to make explicit
+The kiosk is only as trustworthy as the ETA feed.1.
+Too much interactivity hurts glanceability.2.
+Weak network must not produce blank screens.3.
+Physical placement affects usability heavily.4.
+Stop identity and route direction must never be ambiguous.5.
+TransitSense recommendation
+Default choice
+What to emphasize in the SIH pitch
+lower passenger uncertainty,•
+crowd-aware waiting decisions,•
+offline-first display behavior,•
+accessibility and first-time-user friendliness.•
+Avoid for first MVP
+complex trip planning,•
+heavy map interaction,•
+or always-online behavior.•
+
+
+================================================================================
+FILE: Overview & Outline-2026080521181060.pdf (Pages: 3)
+================================================================================
+--- PAGE 1 ---
+                                        
+Overview & Outline
+                                        
+Purpose
+This document is the research backbone for TransitSense. It is meant for the SIH team, mentors, and judges 
+who need a clear view of what methods exist, what trade-oﬀs they carry, and which ones are realistic for a 
+student-built prototype.
+This review supports three kinds of decisions:
+Working principles
+Outline
+1. Overview
+2. Bus tracking & ETA prediction
+3. Passenger counting and density estimation
+Which methods are strong enough to cite in the pitch.1. 
+Which methods are practical for a low-cost, privacy-friendly, oﬄine-tolerant MVP.2. 
+Which ideas belong in the bus demo now versus the train/metro extension story later.3. 
+Prefer peer-reviewed and technically credible sources.•
+Judge every method on accuracy, complexity, data needs, privacy, hardware cost, and connectivity 
+assumptions.•
+Translate every paper into a TransitSense ﬁt recommendation rather than just summarizing it.•
+Keep the bus MVP as the main implementation focus, with train/metro as a scalable extension layer.•
+Problem framing for public transport intelligence in the SIH context.•
+Why buses are the deep prototype focus.•
+What decisions this literature review should inform.•
+GPS-based tracking pipelines.•
+Map-matching and route alignment.•
+Statistical, ML, and deep-learning ETA approaches.•
+Handling sparse/noisy GPS and intermittent connectivity.•
+Recommended MVP baseline and advanced option.•
+Manual, sensor-based, and camera-based approaches.•
+--- PAGE 2 ---
+4. Station kiosks and real-time information displays
+5. Route maps and wayﬁnding
+6. Privacy-preserving analytics and low-resource deployment
+7. Comparison tables
+8. Key decisions for TransitSense
+Update policy
+As new research is added, each method summary should include:
+Occupancy classes vs exact counting.•
+Edge inference and privacy-preserving analytics.•
+Low-cost camera deployment constraints.•
+Recommended MVP baseline and advanced option.•
+Real-time arrival boards and freshness indicators.•
+Oﬄine-ﬁrst kiosk behavior.•
+Stop-level information design for passengers.•
+Hardware assumptions for a student demo.•
+Bus route clarity and stop guidance.•
+Metro and local-train line-map design patterns.•
+Interchange communication and ﬁrst-time-user support.•
+What can be simulated well in a hackathon demo.•
+On-device processing patterns.•
+What data should never be stored.•
+Edge/cloud split for poor-network conditions.•
+Low-cost hardware trade-oﬀs.•
+ETA methods comparison.•
+Density methods comparison.•
+Kiosk/wayﬁnding design comparison.•
+Recommended default choices, stretch goals, and avoid-list.•
+Recommended architecture choices.•
+Risks and assumptions.•
+Open research questions still worth exploring.•
+Problem•
+--- PAGE 3 ---
+This keeps the document usable as both a citation source and a design decision log.
+                                    
+                        
+Data•
+Method•
+Results•
+Constraints•
+Fit for TransitSense•
+
+
+================================================================================
+FILE: Passenger Density Estimation – Methods, Trade-offs, and TransitSense Fit _ TransitSense – Literature Review.pdf (Pages: 7)
+================================================================================
+--- PAGE 1 ---
+This page reviews practical methods for estimating bus passenger density / occupancy and translates them into 
+a realistic TransitSense choice.
+The research pattern is clear:
+Count boarding and alighting events and maintain a running occupancy estimate.
+Estimate how crowded the bus is from inside-bus imagery, often using object detection, tracking, or density 
+maps.
+Estimate how many people are waiting at a stop or kiosk area using overhead or wide-angle cameras.
+Overview
+Exact full-bus counting is harder than it sounds in crowded, occluded, moving vehicles.1.
+For hackathon use, occupancy bands (low / medium / high or seats available / standing room / 
+crowded) are often more realistic and more useful than exact counts.
+2.
+On-device video processing is the strongest privacy-friendly path when raw images are not stored or 
+transmitted.
+3.
+Doorway event counting is often simpler than whole-cabin density estimation.4.
+Stop-level crowd counting and in-bus occupancy are related but distinct problems; TransitSense can 
+benefit from both, but the first MVP should not overpromise exactness.
+5.
+Core sources reviewed
+A Privacy-Preserving Edge Computing Solution for Real-Time Passenger Counting at Bus Stops using 
+Overhead Fisheye Camera
+1.
+Automatic Passenger Counting on the Edge via Unsupervised Clustering2.
+BusEdge: Efficient Live Video Analytics for Transit Buses via Edge Computing3.
+Passenger Counting in Mass Public Transport Systems using Computer Vision and Deep Learning4.
+Privacy-centric AI-based real-time storage-less edge computing approaches for passenger counting and 
+action classification on public transport vehicles
+5.
+Video-based automatic people counting for public transport: On-bus versus off-bus deployment6.
+Real-Time Passenger Detection and Counting Using Edge AI Camera7.
+Note: Some sources were only accessible through abstracts, repositories, or summary pages rather than fully 
+open detailed PDFs. Where exact metrics were not visible, the method summary below stays cautious.
+What the literature consistently says
+1. There are three distinct problem styles
+A. Doorway counting
+B. Cabin density estimation
+C. Stop/platform crowd estimation
+--- PAGE 2 ---
+For TransitSense, these should not be mixed up. The most practical bus-MVP question is:
+Papers on deep crowd counting show strong promise, but real deployments still struggle with:
+That is why an SIH MVP should usually present:
+rather than pretending exact live counts are always trustworthy.
+The strongest privacy-preserving pattern across sources is:
+The ETH storage-less edge paper and edge-camera sources strongly reinforce that privacy can be designed into 
+the pipeline rather than added later.
+Estimate occupancy by counting each person who boards and alights.
+How crowded is this bus right now, in a privacy-friendly way?
+2. Exact counts are fragile; occupancy classes are robust
+occlusion,•
+motion blur,•
+lighting changes,•
+door congestion,•
+camera angle issues,•
+and calibration drift.•
+Low occupancy•
+Moderate occupancy•
+High occupancy•
+Very crowded•
+3. Privacy is mainly an architecture choice
+process video on the edge device,1.
+do not store raw video,2.
+transmit only aggregate outputs,3.
+expose only density level / count / confidence.4.
+Method families
+A. Doorway camera counting with line crossing / tracking
+Problem
+Data
+single camera near bus door•
+video stream or frame samples•
+running count state•
+--- PAGE 3 ---
+The edge AI camera source using in-sensor inference plus tracking logic is a strong example of this deployment 
+style.
+This is usually easier to operationalize than full-cabin counting because the camera only needs to watch a narrow 
+interaction zone.
+Strong if raw video is not stored and only counts are retained.
+Low to medium. A single camera plus Raspberry Pi / edge device can be enough.
+Good for poor network. Counting can run entirely on-bus and only upload aggregates.
+Best practical MVP choice if the goal is live bus occupancy.
+Estimate how crowded the bus is from a wider interior view.
+Use lightweight computer vision to classify the scene into density bands, or apply a density-map / crowd-
+counting model to estimate occupancy.
+The TransMilenio deep-learning paper shows the power of density-based crowd counting, while BusEdge 
+demonstrates how bus video analytics can be structured around edge processing and limited bandwidth.
+Potentially more informative than doorway counting because it captures overall crowding, not just entry/exit 
+Method
+Detect person entering or leaving.•
+Track movement across a virtual line or zone.•
+Increase/decrease current occupancy estimate.•
+Convert count into occupancy bands if needed.•
+Results in practice
+Constraints
+Misses happen during heavy crowding or group boarding.•
+Errors accumulate over time if correction is not applied.•
+Needs a reset/recalibration strategy.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+B. In-bus occupancy classification from cabin imagery
+Problem
+Data
+one or more in-cabin camera views•
+labelled frames or occupancy classes•
+optional head / person annotations•
+Method
+Results in practice
+--- PAGE 4 ---
+events.
+Medium to strong depending on design. Strong only when inference is on-device and images are not stored or 
+transmitted.
+Medium.
+Moderate. Best if inference is local and only occupancy labels are uploaded.
+Strong innovation layer. Very good for the pitch, but use occupancy classes instead of claiming precise counts.
+Estimate crowd size at a stop or kiosk area.
+The Concordia bus-stop study uses an overhead fisheye camera with edge deployment on Jetson hardware to 
+count waiting passengers while preserving privacy.
+This is a strong method for stop crowd estimation, especially where a kiosk display is part of the experience.
+Strong if processed locally and only counts are exposed.
+Medium.
+Good for intermittent network because counts can be generated locally.
+Excellent for future kiosk/stop extensions and possibly demo simulation, but not the easiest first choice for bus-
+Constraints
+Occlusion is the main challenge.•
+Wide interior coverage may need better camera placement.•
+Training data from the actual environment matters a lot.•
+Exact counts are less reliable than coarse occupancy bands in student prototypes.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+C. Overhead stop-level crowd counting
+Problem
+Data
+overhead fisheye or wide-angle view of the waiting area•
+edge device for local inference•
+Method
+Results in practice
+Constraints
+Better for stop crowd than in-bus occupancy.•
+Requires mounting and stable field of view.•
+Jetson-class hardware may be heavier than a minimal hackathon build.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+--- PAGE 5 ---
+inside density.
+Estimate people count from smartphones or other devices.
+The MDPI Sensors paper uses edge clustering on Wi-Fi probe signals.
+Interesting as a low-visual-intrusion method, but highly dependent on whether passengers have discoverable 
+devices and whether those signals can be interpreted robustly.
+Weaker than on-device aggregate video methods because device-signal collection can feel more invasive and 
+may raise user-trust issues.
+Low.
+Good offline.
+Not recommended as the main MVP method. At best, it is a research curiosity or backup signal.
+Infer passenger presence and actions without storing images.
+The ETH privacy-centric paper shows a storage-less edge approach where only transient features are processed 
+for passenger monitoring and action understanding.
+This is appealing because it treats privacy as a first-class constraint.
+D. Wi-Fi / device-signal counting
+Problem
+Data
+Wi-Fi probe requests•
+device-signal observations•
+Method
+Results in practice
+Constraints
+Device ownership ≠ person count.•
+MAC randomization complicates reliability.•
+Stationary nearby devices can create noise.•
+Stronger privacy concerns than aggregate CV outputs.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+E. Storage-less pose / geometry-based edge analytics
+Problem
+Data
+live camera frames•
+pose/joint or geometry features•
+Method
+Results in practice
+Constraints
+--- PAGE 6 ---
+Very strong.
+Medium.
+Good, because it is designed around on-device processing.
+Useful as a privacy design principle and possible stretch idea, but not the easiest core implementation path.
+Use doorway-based passenger event counting to estimate occupancy, then expose only an occupancy band.
+Why this beats exact count-first thinking:
+Add an in-bus occupancy classification model that periodically verifies or corrects the doorway count using 
+wide-view snapshots processed locally.
+This gives TransitSense a strong hybrid story:
+Prefer:
+More complex than simple doorway counting.•
+Pose quality can degrade in crowded conditions.•
+Best for behavior/action understanding rather than only occupancy.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+Comparison table
+Design principles for TransitSense
+Recommended baseline
+It is easier to build.1.
+It works with a single camera.2.
+It is easier to explain and debug.3.
+It aligns with privacy-first edge processing.4.
+The final user output (crowded or not crowded) is what passengers actually care about most.5.
+Recommended advanced option
+event counting for continuity,•
+scene-based occupancy class for correction,•
+aggregate output only.•
+What to show users
+--- PAGE 7 ---
+Avoid promising:
+Build the MVP around a single doorway camera with on-device boarding/alighting counting and expose an 
+occupancy band.
+Add in-bus occupancy classification as a correction or demo comparison layer.
+Use overhead stop crowd counting for kiosk scenarios.
+Do not make Wi-Fi/device-signal counting the main strategy.
+This choice best matches SIH constraints: privacy-friendly, low-cost, explainable, and robust enough for a 
+believable demo.
+seats available•
+moderate crowd•
+standing room•
+very crowded•
+exact passenger count,•
+coach-level precision,•
+or continuous perfect measurement under all conditions.•
+Constraints and risks to make explicit
+Camera placement matters more than model choice in many cases.1.
+Crowding at doors causes double counts and missed counts.2.
+Exact count claims are risky without extensive calibration.3.
+Edge compute choice matters; Jetson-class hardware is powerful but may be overkill for a student MVP.4.
+Trust depends on privacy design; never store identifiable footage.5.
+TransitSense recommendation
+Default choice
+Add if time permits
+Extension path
+Avoid for first MVP
+
+
+================================================================================
+FILE: Train & Metro Extensions – Methods, Trade-offs, and TransitSense Fit _ TransitSense – Literature Review.pdf (Pages: 6)
+================================================================================
+--- PAGE 1 ---
+This page summarizes research-backed design directions for extending TransitSense beyond the bus MVP into 
+local train and metro contexts.
+The key pattern across the literature is:
+In buses, the most important questions are often:
+In rail systems, those still matter, but passengers also need:
+So the rail extension should emphasize network guidance and interchange clarity, not just vehicle tracking.
+Overview
+Real-time information reduces uncertainty, but only if passengers trust it.1.
+Route maps strongly shape path choice, so map design is not cosmetic — it changes rider behavior.2.
+Crowding information is useful even if only some passengers act on it.3.
+Physical and digital wayfinding must reinforce each other, especially for first-time users and 
+interchanges.
+4.
+For SIH, the best extension is not full rail operations control — it is a clear passenger guidance layer
+built on top of the bus MVP logic.
+5.
+Core sources reviewed
+Heavy-rail real-time arrival signage study (MBTA)1.
+Impact of real-time crowding information: a Stockholm metro pilot study2.
+Mind the Map! The Impact of Transit Maps on Path Choice in Public Transit3.
+Research on Users’ Willingness to Use the Urban Subway Wayfinding Signage System: Wuxi Subway4.
+Mind the Gap: Navigating the Space Between Digital and Physical Wayfinding in Public Transit5.
+Note: Some sources were available mainly as public summaries or abstract-level pages rather than fully open 
+detailed text. The conclusions below focus on repeated design lessons rather than over-precise technical claims.
+What the literature consistently says
+1. Rail users need guidance more than raw tracking
+where is my bus,•
+when will it arrive,•
+how crowded is it?•
+which line to take,•
+which platform or direction is correct,•
+where to transfer,•
+and how crowded different train cars or interchange paths are.•
+--- PAGE 2 ---
+The heavy-rail countdown-sign literature shows that arrival signage can sharply reduce passengers’ 
+overestimation of waiting time. This is good for perceived service quality.
+But it also shows a limit: real-time displays are only helpful when they feel credible.
+Always pair rail ETA or next-train info with:
+The Stockholm metro pilot is especially relevant for TransitSense. Even though only a subset of passengers 
+noticed and acted on real-time crowding information, the system still improved passenger distribution across 
+train cars.
+A metro extension does not need exact every-passenger control. Even a simple display such as:
+can improve user decisions and make the system feel advanced.
+The map-design literature shows that passengers often trust schematic maps more than their own intuition. 
+Small layout changes can alter which routes users choose.
+Route maps must be treated as decision tools, not decoration.
+This means:
+The wayfinding literature emphasizes that users switch between digital aids and physical surroundings.
+The extension layer should combine:
+2. Real-time arrival information helps, but trust is fragile
+Design implication for TransitSense
+clear destination direction,•
+platform information,•
+and freshness / live status.•
+3. Crowding information is powerful even with partial use
+Design implication for TransitSense
+Front coaches crowded•
+Middle coaches moderate•
+Rear coaches less crowded•
+4. Transit maps strongly influence route choice
+Design implication for TransitSense
+transfer complexity should be visually honest,•
+destinations should be dominant,•
+line color consistency matters,•
+and overly distorted layouts can mislead first-time users.•
+5. Digital and physical wayfinding work best together
+Design implication for TransitSense
+--- PAGE 3 ---
+This is especially important for first-time users and tourists.
+Show passengers when the next train comes and which direction it serves.
+Reuse the bus-kiosk logic, but adapt each row to rail terminology:
+Strong. No personal data required.
+Low.
+Can work with cached static station data plus live arrival values.
+Very strong reuse candidate.
+Help users understand how to traverse a rail network, especially when transferring.
+a digital route-map view,•
+station / platform / interchange cues,•
+and kiosk/signage logic that mirrors the same structure.•
+Method / design families
+A. Arrival-board extension for rail
+Problem
+Data
+train or timetable ETA•
+line ID / destination•
+platform / direction metadata•
+freshness status•
+Method
+line name/color,•
+destination,•
+platform,•
+minutes to arrival,•
+crowd band if available.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+B. Schematic route-map and interchange guidance
+Problem
+Data
+line graph / station graph•
+interchange nodes•
+line colors / labels•
+--- PAGE 4 ---
+Create a simplified graph-based map rather than an exact geographic map.
+Strong.
+Low.
+Excellent offline, since map assets can be bundled locally.
+Best core extension module.
+Help riders choose less crowded train cars or waiting zones.
+Use a simple left/middle/right or front/middle/rear crowd indicator rather than precise coach telemetry.
+Can remain strong if based on aggregate counts or simulated labels.
+Low to medium depending on how realism is achieved.
+Works well if the crowd labels are simulated or aggregated.
+destination names•
+Method
+Design rules from the literature
+keep a stable color-language,•
+minimize unnecessary distortions,•
+make transfer nodes prominent,•
+show destination direction clearly,•
+avoid overloaded labels.•
+Constraints
+Map design changes passenger behavior, so poor design can mislead.•
+Overly complex maps weaken first-time-user confidence.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+C. Coach/platform crowding guidance
+Problem
+Data
+coach-level or approximate train-section crowd status•
+platform zone mapping•
+train arrival timing•
+Method
+Constraints
+Real coach-level sensing is difficult in a hackathon.•
+Must avoid false precision.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+--- PAGE 5 ---
+Strong demonstration feature, but best as a simulated extension.
+Support network exploration, transfer planning, and user-specific route decisions.
+Interactive system with route search and guided transfers.
+Strong if user queries are not stored.
+Medium.
+Needs offline fallback screens to remain usable.
+Future enhancement, not first extension.
+Build the train/metro extension around three ideas:
+Fit for TransitSense
+D. Full interactive trip-planning kiosk
+Problem
+Data
+network graph•
+service state•
+interchange logic•
+station exits / landmarks•
+Method
+Constraints
+Rich, but too broad for a first hackathon prototype.•
+More UI and data-structure complexity.•
+Privacy stance
+Hardware cost level
+Connectivity assumptions
+Fit for TransitSense
+Comparison table
+Design principles for TransitSense
+Recommended extension story
+Reuse ETA-style passenger information1.
+Add graph-based route and interchange guidance2.
+Optionally simulate coach crowding guidance3.
+Why this is the right SIH framing
+It reuses the strongest bus MVP modules.•
+--- PAGE 6 ---
+Extend TransitSense with a rail arrival board + schematic route-map/interchange guidance layer.
+Add simple crowding guidance by train section or coach group.
+Do not center the extension on:
+The best SIH extension is one that feels broader than the bus MVP, while still being explainable and demoable.
+It adds a clear network-level intelligence story.•
+It avoids overcommitting to complex live train integrations.•
+It gives judges a believable scale-up path.•
+Constraints and risks to make explicit
+Rail route maps can mislead if too distorted.1.
+Interchange logic must be simple and clear.2.
+Coach-level crowding claims should stay approximate unless well supported.3.
+The extension should not depend on complex live railway integrations.4.
+Static network guidance may matter more than live train telemetry in the demo.5.
+TransitSense recommendation
+Default choice
+Add if time permits
+Avoid for first extension
+full trip planning,•
+exact real-time train operations integration,•
+or highly detailed geographic maps.•
+
+

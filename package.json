@@ -1,0 +1,10 @@
+{
+  "name": "yara-mobile",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "user-app": "npm -w packages/user-app run start",
+    "admin-app": "npm -w packages/admin-app run start",
+    "typecheck": "npm -w packages/shared run typecheck && npm -w packages/user-app run typecheck && npm -w packages/admin-app run typecheck"
+  }
+}

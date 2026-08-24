@@ -1,0 +1,14 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "baseUrl": ".",
+    "paths": {
+      "@yara/shared": ["../../packages/shared/index.ts"],
+      "@yara/shared/*": ["../../packages/shared/*"]
+    }
+  },
+  "include": ["src/**/*", "App.tsx"]
+}
