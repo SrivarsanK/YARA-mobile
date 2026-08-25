@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Image, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View, Image, StyleSheet, StyleProp, ViewStyle, Platform } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -17,15 +17,15 @@ interface YaraAnimatedLogoProps {
 }
 
 export const YaraAnimatedLogo: React.FC<YaraAnimatedLogoProps> = ({
-  height = 38,
-  width = 130,
+  height = 42,
+  width = 135,
   animate = true,
   style,
 }) => {
   const bobY = useSharedValue(0);
 
   useEffect(() => {
-    if (animate) {
+    if (animate && Platform.OS !== 'web') {
       bobY.value = withRepeat(
         withSequence(
           withTiming(-2, { duration: 1100, easing: Easing.inOut(Easing.quad) }),
@@ -44,11 +44,29 @@ export const YaraAnimatedLogo: React.FC<YaraAnimatedLogoProps> = ({
     transform: [{ translateY: bobY.value }],
   }));
 
+  if (Platform.OS === 'web') {
+    return (
+      <View style={[styles.container, { width, height }, style]}>
+        <img
+          src="/assets/yara_animated_logo.svg"
+          alt="YARA Logo"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            display: 'block',
+          }}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { width, height }, style]}>
       <Animated.View style={[{ width: '100%', height: '100%' }, animatedStyle]}>
         <Image
-          source={require('../../assets/yara-logo.png')}
+          source={require('../../assets/yara_animated_logo.svg')}
+          defaultSource={require('../../assets/yara-logo.png')}
           style={styles.image}
           resizeMode="contain"
         />
@@ -61,6 +79,7 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'visible',
   },
   image: {
     width: '100%',

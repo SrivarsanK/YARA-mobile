@@ -9,7 +9,7 @@ export const AdminScreen: React.FC = () => (
       <Text style={styles.subtitle}>Fault injection, fleet control, scenario runner, DB inspector</Text>
     </View>
     <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Screen scaffold — implementation in Phase 5</Text>
+      <Text style={styles.placeholderText}>Screen scaffold ï¿½ implementation in Phase 5</Text>
     </View>
   </ScrollView>
 );

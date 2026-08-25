@@ -274,7 +274,7 @@ export const RoutesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'transparent',
   },
   listContent: {
     paddingHorizontal: 16,

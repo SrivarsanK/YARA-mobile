@@ -10,13 +10,11 @@ export default function App() {
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       const styleId = 'yara-transit-bg-style';
       if (!document.getElementById(styleId)) {
-        // On Expo Web, Metro serves static assets from /assets/ at dev time.
-        // resolveAssetSource is not available on web; use the static path directly.
         const bgUrl = '/assets/transit-bg-pattern.jpg';
         const style = document.createElement('style');
         style.id = styleId;
         style.innerHTML = `
-          html, body, #root {
+          html, body, #root, [data-testid="root"] {
             background-color: #f6f4eb !important;
             background-image: url('${bgUrl}') !important;
             background-repeat: repeat !important;
@@ -24,6 +22,9 @@ export default function App() {
             background-size: 360px auto !important;
             color: #1e293b;
             min-height: 100vh;
+            min-width: 100vw;
+            width: 100%;
+            height: 100%;
             margin: 0;
             padding: 0;
           }
@@ -47,6 +48,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F6F4EB',
+    backgroundColor: 'transparent',
   },
 });
