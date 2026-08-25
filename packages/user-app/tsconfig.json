@@ -5,6 +5,8 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "types": ["node"],
     "paths": {
       "@yara/shared": ["../../packages/shared/index.ts"],
       "@yara/shared/*": ["../../packages/shared/*"]
