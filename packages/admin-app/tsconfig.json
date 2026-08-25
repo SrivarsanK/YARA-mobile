@@ -8,7 +8,9 @@
     "paths": {
       "@yara/shared": ["../../packages/shared/index.ts"],
       "@yara/shared/*": ["../../packages/shared/*"]
-    }
+    },
+    "ignoreDeprecations": "6.0",
+    "types": ["node"]
   },
   "include": ["src/**/*", "App.tsx"]
 }
