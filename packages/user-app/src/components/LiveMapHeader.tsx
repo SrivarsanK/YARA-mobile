@@ -1,4 +1,4 @@
-﻿// packages/user-app/src/components/LiveMapHeader.tsx
+// packages/user-app/src/components/LiveMapHeader.tsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MapPin, ChevronDown } from 'lucide-react-native';
@@ -8,6 +8,9 @@ import type { AgencyPreset } from '@yara/shared/lib/agencies';
 interface LiveMapHeaderProps {
   selectedAgency: AgencyPreset;
   isConnected: boolean;
+  isMockFallback?: boolean;
+  reconnectAttempts?: number;
+  error?: string | null;
   onOpenAgencySelector: () => void;
   routeCode?: string;
   legStateText?: string;
@@ -16,10 +19,46 @@ interface LiveMapHeaderProps {
 export const LiveMapHeader: React.FC<LiveMapHeaderProps> = ({
   selectedAgency,
   isConnected,
+  isMockFallback = false,
+  reconnectAttempts = 0,
+  error: _error,
   onOpenAgencySelector,
   routeCode = 'S26',
   legStateText,
 }) => {
+  const statusConfig = (() => {
+    if (isConnected) {
+      return {
+        text: 'LIVE FEED',
+        dotColor: '#10B981',
+        textColor: '#065F46',
+        pillStyle: styles.statusPillLive,
+      };
+    }
+    if (isMockFallback || reconnectAttempts >= 5) {
+      return {
+        text: 'MOCK FEED',
+        dotColor: '#EF4444',
+        textColor: '#991B1B',
+        pillStyle: styles.statusPillMock,
+      };
+    }
+    if (reconnectAttempts > 0) {
+      return {
+        text: `RECONNECTING ${reconnectAttempts}/5`,
+        dotColor: '#F59E0B',
+        textColor: '#92400E',
+        pillStyle: styles.statusPillReconnecting,
+      };
+    }
+    return {
+      text: 'CONNECTING...',
+      dotColor: '#3B82F6',
+      textColor: '#1E40AF',
+      pillStyle: styles.statusPillConnecting,
+    };
+  })();
+
   return (
     <View style={styles.container}>
       {/* Top row: Agency selector + Connection Status */}
@@ -38,26 +77,21 @@ export const LiveMapHeader: React.FC<LiveMapHeaderProps> = ({
           <ChevronDown size={14} color={colors.text.muted} />
         </TouchableOpacity>
 
-        {/* Connection Status Pill */}
-        <View
-          style={[
-            styles.statusPill,
-            isConnected ? styles.statusPillConnected : styles.statusPillDisconnected,
-          ]}
-        >
+        {/* Connection Status Pill - 4 States */}
+        <View style={[styles.statusPill, statusConfig.pillStyle]}>
           <View
             style={[
               styles.statusDot,
-              { backgroundColor: isConnected ? '#10B981' : '#F59E0B' },
+              { backgroundColor: statusConfig.dotColor },
             ]}
           />
           <Text
             style={[
               styles.statusText,
-              { color: isConnected ? '#065F46' : '#92400E' },
+              { color: statusConfig.textColor },
             ]}
           >
-            {isConnected ? 'LIVE FEED' : 'CONNECTING...'}
+            {statusConfig.text}
           </Text>
         </View>
       </View>
@@ -133,13 +167,21 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
   },
-  statusPillConnected: {
+  statusPillLive: {
     backgroundColor: '#ECFDF5',
     borderColor: '#A7F3D0',
   },
-  statusPillDisconnected: {
+  statusPillReconnecting: {
     backgroundColor: '#FEF3C7',
     borderColor: '#FDE68A',
+  },
+  statusPillConnecting: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
+  },
+  statusPillMock: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECDD3',
   },
   statusDot: {
     width: 6,
