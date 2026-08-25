@@ -20,7 +20,7 @@ import { useTransit } from '../context/TransitContext';
 import { Map } from '../components/Map';
 import { LiveMapHeader } from '../components/LiveMapHeader';
 import { AgencySelectorModal } from '../components/AgencySelectorModal';
-import { AGENCY_PRESETS, AgencyPreset, S26_CORRIDOR_STOPS } from '../constants/agencies';
+import { AGENCY_PRESETS, AgencyPreset, S26_CORRIDOR_STOPS } from '@yara/shared/lib/agencies';
 
 export const LiveMapScreen: React.FC = () => {
   const insets = useSafeAreaInsets();

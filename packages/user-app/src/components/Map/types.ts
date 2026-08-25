@@ -1,6 +1,6 @@
-// packages/user-app/src/components/Map/types.ts
+﻿// packages/user-app/src/components/Map/types.ts
 import type { BusLeg } from '@yara/shared';
-import type { StopCoordinate } from '../../constants/agencies';
+import type { StopCoordinate } from '@yara/shared/lib/agencies';
 
 export interface MapViewProps {
   vehicleLat: number;

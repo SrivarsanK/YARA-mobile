@@ -1,9 +1,9 @@
-// packages/user-app/src/components/LiveMapHeader.tsx
+﻿// packages/user-app/src/components/LiveMapHeader.tsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { MapPin, ChevronDown, Radio, Activity } from 'lucide-react-native';
+import { MapPin, ChevronDown } from 'lucide-react-native';
 import { colors } from '@yara/shared';
-import type { AgencyPreset } from '../constants/agencies';
+import type { AgencyPreset } from '@yara/shared/lib/agencies';
 
 interface LiveMapHeaderProps {
   selectedAgency: AgencyPreset;
@@ -68,7 +68,7 @@ export const LiveMapHeader: React.FC<LiveMapHeaderProps> = ({
           <Text style={styles.routeBadgeText}>BUS {routeCode}</Text>
         </View>
         <Text style={styles.routeDetails} numberOfLines={1}>
-          {legStateText || 'Ashok Pillar ➔ Valasaravakkam'}
+          {legStateText || 'Ashok Pillar -> Valasaravakkam'}
         </Text>
       </View>
     </View>

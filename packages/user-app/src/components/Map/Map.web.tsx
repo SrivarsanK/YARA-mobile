@@ -1,4 +1,4 @@
-// packages/user-app/src/components/Map/Map.web.tsx
+﻿// packages/user-app/src/components/Map/Map.web.tsx
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import Svg, {
@@ -21,10 +21,9 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import type { MapViewProps } from './types';
-import { S26_CORRIDOR_STOPS } from '../../constants/agencies';
+import { S26_CORRIDOR_STOPS } from '@yara/shared/lib/agencies';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-const AnimatedG = Animated.createAnimatedComponent(G);
 
 export const Map: React.FC<MapViewProps> = ({
   vehicleLat,
@@ -118,7 +117,7 @@ export const Map: React.FC<MapViewProps> = ({
       {/* City & Route Watermark */}
       <View style={styles.watermarkContainer}>
         <Text style={styles.watermarkCity}>CHENNAI MTC CORRIDOR</Text>
-        <Text style={styles.watermarkRoute}>Route {routeCode} • Live Simulation</Text>
+        <Text style={styles.watermarkRoute}>Route {routeCode} | Live Simulation</Text>
       </View>
 
       <Svg

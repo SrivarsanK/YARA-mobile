@@ -1,10 +1,10 @@
-// packages/user-app/src/components/Map/Map.native.tsx
+﻿// packages/user-app/src/components/Map/Map.native.tsx
 import React, { useRef, useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import MapView, { Marker, Polyline, Circle, PROVIDER_DEFAULT } from 'react-native-maps';
+import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from 'react-native-maps';
 import { BusMarker } from '../BusMarker';
 import type { MapViewProps } from './types';
-import { S26_CORRIDOR_STOPS } from '../../constants/agencies';
+import { S26_CORRIDOR_STOPS } from '@yara/shared/lib/agencies';
 
 export const Map: React.FC<MapViewProps> = ({
   vehicleLat,

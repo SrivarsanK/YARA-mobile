@@ -1,4 +1,4 @@
-// packages/user-app/src/components/AgencySelectorModal.tsx
+﻿// packages/user-app/src/components/AgencySelectorModal.tsx
 import React from 'react';
 import {
   View,
@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Bus, Check, X } from 'lucide-react-native';
-import { AGENCY_PRESETS, AgencyPreset } from '../constants/agencies';
+import { AGENCY_PRESETS, AgencyPreset } from '@yara/shared/lib/agencies';
 import { colors } from '@yara/shared';
 
 interface AgencySelectorModalProps {
