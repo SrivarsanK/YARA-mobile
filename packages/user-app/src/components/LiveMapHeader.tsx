@@ -1,9 +1,9 @@
 // packages/user-app/src/components/LiveMapHeader.tsx
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { MapPin, ChevronDown } from 'lucide-react-native';
-import { colors } from '@yara/shared';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { MapPin, ChevronDown, Navigation, Search, Mic } from 'lucide-react-native';
 import type { AgencyPreset } from '@yara/shared/lib/agencies';
+import { YaraAnimatedLogo } from './YaraAnimatedLogo';
 
 interface LiveMapHeaderProps {
   selectedAgency: AgencyPreset;
@@ -12,8 +12,10 @@ interface LiveMapHeaderProps {
   reconnectAttempts?: number;
   error?: string | null;
   onOpenAgencySelector: () => void;
+  onSearchPress?: () => void;
   routeCode?: string;
   legStateText?: string;
+  userLocationActive?: boolean;
 }
 
 export const LiveMapHeader: React.FC<LiveMapHeaderProps> = ({
@@ -23,13 +25,15 @@ export const LiveMapHeader: React.FC<LiveMapHeaderProps> = ({
   reconnectAttempts = 0,
   error: _error,
   onOpenAgencySelector,
+  onSearchPress,
   routeCode = 'S26',
   legStateText,
+  userLocationActive = false,
 }) => {
   const statusConfig = (() => {
     if (isConnected) {
       return {
-        text: 'LIVE FEED',
+        text: '1Hz Live Pipeline',
         dotColor: '#10B981',
         textColor: '#065F46',
         pillStyle: styles.statusPillLive,
@@ -37,7 +41,7 @@ export const LiveMapHeader: React.FC<LiveMapHeaderProps> = ({
     }
     if (isMockFallback || reconnectAttempts >= 5) {
       return {
-        text: 'MOCK FEED',
+        text: 'Mock Feed',
         dotColor: '#EF4444',
         textColor: '#991B1B',
         pillStyle: styles.statusPillMock,
@@ -45,14 +49,14 @@ export const LiveMapHeader: React.FC<LiveMapHeaderProps> = ({
     }
     if (reconnectAttempts > 0) {
       return {
-        text: `RECONNECTING ${reconnectAttempts}/5`,
+        text: `Reconnecting ${reconnectAttempts}/5`,
         dotColor: '#F59E0B',
         textColor: '#92400E',
         pillStyle: styles.statusPillReconnecting,
       };
     }
     return {
-      text: 'CONNECTING...',
+      text: 'Connecting...',
       dotColor: '#3B82F6',
       textColor: '#1E40AF',
       pillStyle: styles.statusPillConnecting,
@@ -61,50 +65,48 @@ export const LiveMapHeader: React.FC<LiveMapHeaderProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Top row: Agency selector + Connection Status */}
+      {/* Top Navbar Row */}
       <View style={styles.topRow}>
-        {/* Agency Selector Button */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.agencyButton}
-          onPress={onOpenAgencySelector}
-        >
-          <View style={styles.agencyIconWrapper}>
-            <MapPin size={14} color="#2563EB" />
+        {/* YARA Logo */}
+        <View style={styles.logoWrapper}>
+          <YaraAnimatedLogo width={110} height={36} animate={true} />
+        </View>
+
+        {/* Right Action Items */}
+        <View style={styles.rightActions}>
+          {/* 1Hz Live Pipeline / Status pill */}
+          <View style={[styles.statusPill, statusConfig.pillStyle]}>
+            <View style={[styles.statusDot, { backgroundColor: statusConfig.dotColor }]} />
+            <Text style={[styles.statusText, { color: statusConfig.textColor }]}>
+              {statusConfig.text}
+            </Text>
           </View>
-          <Text style={styles.agencyCity}>{selectedAgency.city}</Text>
-          <Text style={styles.agencyShortName}>({selectedAgency.shortName})</Text>
-          <ChevronDown size={14} color={colors.text.muted} />
-        </TouchableOpacity>
 
-        {/* Connection Status Pill - 4 States */}
-        <View style={[styles.statusPill, statusConfig.pillStyle]}>
-          <View
-            style={[
-              styles.statusDot,
-              { backgroundColor: statusConfig.dotColor },
-            ]}
-          />
-          <Text
-            style={[
-              styles.statusText,
-              { color: statusConfig.textColor },
-            ]}
+          {/* Agency / City Selector button */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={styles.agencyButton}
+            onPress={onOpenAgencySelector}
           >
-            {statusConfig.text}
-          </Text>
+            <MapPin size={12} color="#F7A501" />
+            <Text style={styles.agencyCity}>{selectedAgency.city}</Text>
+            <ChevronDown size={12} color="#64748B" />
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Bottom row: Active Route Info Bar */}
-      <View style={styles.routeBar}>
-        <View style={styles.routeBadge}>
-          <Text style={styles.routeBadgeText}>BUS {routeCode}</Text>
-        </View>
-        <Text style={styles.routeDetails} numberOfLines={1}>
-          {legStateText || 'Ashok Pillar -> Valasaravakkam'}
+      {/* Search Input Bar (Matches Web Home view) */}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        style={styles.searchBar}
+        onPress={onSearchPress}
+      >
+        <Search size={16} color="#94A3B8" />
+        <Text style={styles.searchPlaceholder} numberOfLines={1}>
+          Search bus number, stop or destination...
         </Text>
-      </View>
+        <Mic size={16} color="#94A3B8" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -116,11 +118,12 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
-    gap: 8,
+    borderBottomColor: '#E2E8F0',
+    gap: 10,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
     elevation: 3,
     zIndex: 20,
   },
@@ -129,42 +132,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  agencyButton: {
+  logoWrapper: {
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  rightActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: colors.border.light,
-  },
-  agencyIconWrapper: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#EFF6FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  agencyCity: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: colors.text.primary,
-  },
-  agencyShortName: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.text.muted,
   },
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 14,
     borderWidth: 1,
   },
   statusPillLive: {
@@ -191,28 +174,43 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.5,
   },
-  routeBar: {
+  agencyButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 16,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  routeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    backgroundColor: '#2563EB',
-  },
-  routeBadgeText: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#FFFFFF',
-  },
-  routeDetails: {
+  agencyCity: {
     fontSize: 12,
     fontWeight: '700',
-    color: colors.text.secondary,
+    color: '#0F172A',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+  searchPlaceholder: {
     flex: 1,
+    fontSize: 13,
+    color: '#94A3B8',
+    fontWeight: '500',
   },
 });

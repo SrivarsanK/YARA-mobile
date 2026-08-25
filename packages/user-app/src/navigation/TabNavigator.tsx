@@ -1,10 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Map, Navigation, Route, Search } from 'lucide-react-native';
+import { MapPin, Navigation, Route, Search } from 'lucide-react-native';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { colors } from '@yara/shared';
 import { TabParamList } from './types';
-import { OverviewScreen } from '../screens/OverviewScreen';
 import { LiveMapScreen } from '../screens/LiveMapScreen';
 import { TrackBusScreen } from '../screens/TrackBusScreen';
 import { RoutesScreen } from '../screens/RoutesScreen';
@@ -12,45 +10,26 @@ import { SearchScreen } from '../screens/SearchScreen';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
-interface TabBarButtonProps {
-  icon: React.ReactElement;
-  label: string;
-  focused: boolean;
-  onPress: () => void;
-}
-
-const TabBarButton: React.FC<TabBarButtonProps> = ({ icon, label, focused, onPress }) => (
-  <Pressable style={[styles.tabButton, focused && styles.tabButtonFocused]} onPress={onPress} accessibilityRole="button">
-    <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>{icon}</View>
-    <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>{label}</Text>
-  </Pressable>
-);
-
 export const TabNavigator: React.FC = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
-      tabBarActiveTintColor: colors.transit.inboundBlue,
-      tabBarInactiveTintColor: colors.text.muted,
+      tabBarActiveTintColor: '#b17816',
+      tabBarInactiveTintColor: '#64748b',
       tabBarStyle: styles.tabBar,
       tabBarLabelStyle: styles.tabLabel,
+      tabBarItemStyle: styles.tabItem,
       headerShown: false,
     })}
   >
     <Tab.Screen
-      name="Overview"
-      component={OverviewScreen}
-      options={{
-        tabBarIcon: ({ focused, color }) => (
-          <Home size={24} color={color} strokeWidth={focused ? 3 : 2} fill={focused ? colors.transit.inboundBlue : 'none'} />
-        ),
-      }}
-    />
-    <Tab.Screen
       name="LiveMap"
       component={LiveMapScreen}
       options={{
+        tabBarLabel: 'Live Map',
         tabBarIcon: ({ focused, color }) => (
-          <Map size={24} color={color} strokeWidth={focused ? 3 : 2} fill={focused ? colors.transit.inboundBlue : 'none'} />
+          <View style={[styles.iconBox, focused && styles.iconBoxActive]}>
+            <MapPin size={20} color={focused ? '#b17816' : '#64748b'} strokeWidth={focused ? 2.5 : 2} />
+          </View>
         ),
       }}
     />
@@ -58,8 +37,11 @@ export const TabNavigator: React.FC = () => (
       name="TrackBus"
       component={TrackBusScreen}
       options={{
+        tabBarLabel: 'Track Bus',
         tabBarIcon: ({ focused, color }) => (
-          <Navigation size={24} color={color} strokeWidth={focused ? 3 : 2} fill={focused ? colors.transit.inboundBlue : 'none'} />
+          <View style={[styles.iconBox, focused && styles.iconBoxActive]}>
+            <Navigation size={20} color={focused ? '#b17816' : '#64748b'} strokeWidth={focused ? 2.5 : 2} />
+          </View>
         ),
       }}
     />
@@ -67,8 +49,11 @@ export const TabNavigator: React.FC = () => (
       name="Routes"
       component={RoutesScreen}
       options={{
+        tabBarLabel: 'Routes',
         tabBarIcon: ({ focused, color }) => (
-          <Route size={24} color={color} strokeWidth={focused ? 3 : 2} fill={focused ? colors.transit.inboundBlue : 'none'} />
+          <View style={[styles.iconBox, focused && styles.iconBoxActive]}>
+            <Route size={20} color={focused ? '#b17816' : '#64748b'} strokeWidth={focused ? 2.5 : 2} />
+          </View>
         ),
       }}
     />
@@ -76,8 +61,11 @@ export const TabNavigator: React.FC = () => (
       name="Search"
       component={SearchScreen}
       options={{
+        tabBarLabel: 'Search',
         tabBarIcon: ({ focused, color }) => (
-          <Search size={24} color={color} strokeWidth={focused ? 3 : 2} fill={focused ? colors.transit.inboundBlue : 'none'} />
+          <View style={[styles.iconBox, focused && styles.iconBoxActive]}>
+            <Search size={20} color={focused ? '#b17816' : '#64748b'} strokeWidth={focused ? 2.5 : 2} />
+          </View>
         ),
       }}
     />
@@ -86,21 +74,33 @@ export const TabNavigator: React.FC = () => (
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: colors.bg.dark,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: colors.border.medium,
-    paddingBottom: 8,
-    height: 72,
+    borderTopColor: '#E2E8F0',
+    paddingBottom: 6,
+    paddingTop: 6,
+    height: 64,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: -2 },
+    elevation: 8,
   },
-  tabButton: {
-    flex: 1,
+  tabItem: {
+    paddingVertical: 2,
+  },
+  iconBox: {
+    width: 36,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 4,
   },
-  tabButtonFocused: {},
-  iconContainer: { marginBottom: 2 },
-  iconContainerFocused: { transform: [{ scale: 1.1 }] },
-  tabLabel: { fontSize: 11, fontWeight: '500' },
-  tabLabelFocused: { fontWeight: '700' },
+  iconBoxActive: {
+    backgroundColor: '#FEF3C7',
+  },
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
 });

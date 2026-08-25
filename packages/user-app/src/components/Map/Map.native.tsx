@@ -1,4 +1,4 @@
-﻿// packages/user-app/src/components/Map/Map.native.tsx
+// packages/user-app/src/components/Map/Map.native.tsx
 import React, { useRef, useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from 'react-native-maps';
@@ -12,28 +12,39 @@ export const Map: React.FC<MapViewProps> = ({
   vehicleLeg,
   routeCode = 'S26',
   stops = S26_CORRIDOR_STOPS,
-  centerLat = 13.0302,
-  centerLon = 80.1806,
-  latitudeDelta = 0.12,
-  longitudeDelta = 0.12,
+  centerLat,
+  centerLon,
+  userLat,
+  userLon,
+  latitudeDelta = 0.08,
+  longitudeDelta = 0.08,
   onSelectStop,
 }) => {
   const mapRef = useRef<MapView>(null);
+
+  // Prefer user GPS, then explicit center, then route start
+  const initLat = userLat ?? centerLat ?? stops[0]?.lat ?? 13.0302;
+  const initLon = userLon ?? centerLon ?? stops[0]?.lon ?? 80.1806;
 
   const polylineCoords = stops.map((s) => ({
     latitude: s.lat,
     longitude: s.lon,
   }));
 
-  // Initial center and bounds
+  // Center on user location when GPS becomes available
   useEffect(() => {
-    if (mapRef.current && polylineCoords.length > 0) {
-      mapRef.current.fitToCoordinates(polylineCoords, {
-        edgePadding: { top: 60, right: 60, bottom: 120, left: 60 },
-        animated: true,
-      });
+    if (mapRef.current && userLat && userLon) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: userLat,
+          longitude: userLon,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        },
+        800
+      );
     }
-  }, []);
+  }, [userLat, userLon]);
 
   return (
     <View style={styles.container}>
@@ -41,39 +52,41 @@ export const Map: React.FC<MapViewProps> = ({
         ref={mapRef}
         provider={PROVIDER_DEFAULT}
         style={styles.map}
+        userInterfaceStyle="light"
         initialRegion={{
-          latitude: centerLat,
-          longitude: centerLon,
-          latitudeDelta: latitudeDelta,
-          longitudeDelta: longitudeDelta,
+          latitude: initLat,
+          longitude: initLon,
+          latitudeDelta,
+          longitudeDelta,
         }}
         showsUserLocation
         showsMyLocationButton={false}
         showsCompass={false}
+        showsScale={false}
       >
-        {/* Glow Polyline */}
+        {/* Gold glow polyline — matches web CartoDB style */}
         {polylineCoords.length > 1 && (
           <Polyline
             coordinates={polylineCoords}
-            strokeColor="rgba(37, 99, 235, 0.3)"
-            strokeWidth={8}
+            strokeColor="rgba(247,165,1,0.35)"
+            strokeWidth={10}
             lineCap="round"
             lineJoin="round"
           />
         )}
 
-        {/* Core Route Polyline */}
+        {/* Blue core route polyline */}
         {polylineCoords.length > 1 && (
           <Polyline
             coordinates={polylineCoords}
-            strokeColor="#2563EB"
+            strokeColor="#0284c7"
             strokeWidth={4}
             lineCap="round"
             lineJoin="round"
           />
         )}
 
-        {/* Stop Markers */}
+        {/* Stop Markers — numbered circles */}
         {stops.map((stop, idx) => {
           const isStart = idx === 0;
           const isEnd = idx === stops.length - 1;
@@ -132,12 +145,12 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   stopDot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
-    borderColor: '#2563EB',
+    borderColor: '#0284c7',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -156,7 +169,7 @@ const styles = StyleSheet.create({
   stopNumber: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#0284c7',
   },
   terminalStopNumber: {
     color: '#FFFFFF',

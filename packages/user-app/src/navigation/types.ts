@@ -3,7 +3,6 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { CompositeNavigationProp } from '@react-navigation/native';
 
 export type TabParamList = {
-  Overview: undefined;
   LiveMap: undefined;
   TrackBus: undefined;
   Routes: undefined;

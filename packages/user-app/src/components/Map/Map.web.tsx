@@ -1,4 +1,4 @@
-﻿// packages/user-app/src/components/Map/Map.web.tsx
+// packages/user-app/src/components/Map/Map.web.tsx
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import Svg, {
@@ -180,14 +180,15 @@ export const Map: React.FC<MapViewProps> = ({
           const isEnd = idx === stops.length - 1;
 
           return (
-            <G key={stop.id || `stop-${idx}`} onPress={() => onSelectStop?.(stop)}>
+            <G key={stop.id || `stop-${idx}`}>
               <Circle
                 cx={sx}
                 cy={sy}
                 r={isStart || isEnd ? 7 : 4}
                 fill={isStart ? '#16A34A' : isEnd ? '#DC2626' : '#FFFFFF'}
-                stroke={isStart || isEnd ? '#FFFFFF' : '#2563EB'}
+                stroke={isStart || isEnd ? '#FFFFFF' : '#0284c7'}
                 strokeWidth={2}
+                onPress={() => onSelectStop?.(stop)}
               />
               {(isStart || isEnd || idx % 4 === 0) && (
                 <SvgText

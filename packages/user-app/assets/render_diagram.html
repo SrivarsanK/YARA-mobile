@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Excalidraw Renderer</title>
+</head>
+<body style="background: white; margin: 0; padding: 20px; font-family: sans-serif;">
+  <h2>Rendering Excalidraw Diagram...</h2>
+  <div id="container"></div>
+
+  <script type="module">
+    import { exportToSvg } from "https://esm.sh/@excalidraw/utils@0.1.1?bundle";
+
+    async function render() {
+      try {
+        const res = await fetch("/diagram.json");
+        const data = await res.json();
+        
+        const svg = await exportToSvg({
+          elements: data.elements,
+          appState: {
+            viewBackgroundColor: "#ffffff",
+            exportWithDarkMode: false,
+            exportBackground: true,
+            ...data.appState
+          },
+          files: data.files || null
+        });
+
+        document.getElementById("container").innerHTML = "";
+        document.getElementById("container").appendChild(svg);
+        svg.id = "exported_svg";
+        svg.style.maxWidth = "100%";
+        svg.style.height = "auto";
+        window.__SVG_RENDERED__ = true;
+        window.__SVG_STRING__ = svg.outerHTML;
+      } catch (err) {
+        console.error("Render failed:", err);
+        document.getElementById("container").innerText = "Error: " + err.message;
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>
