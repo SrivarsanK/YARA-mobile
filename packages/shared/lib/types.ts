@@ -1,4 +1,4 @@
-﻿// packages/shared/lib/types.ts — LOCKED
+// packages/shared/lib/types.ts — LOCKED
 
 export type OccupancyBand =
   | 'SEATS_AVAILABLE'

@@ -92,10 +92,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border.light,
     padding: 14,
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
+    boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.04)',
     elevation: 1,
   },
   leftRow: {

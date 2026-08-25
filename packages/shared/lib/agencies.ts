@@ -1,4 +1,4 @@
-﻿// packages/shared/lib/agencies.ts - Port from web dashboard
+// packages/shared/lib/agencies.ts - Port from web dashboard
 
 export interface Agency {
   id: string;

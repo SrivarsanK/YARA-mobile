@@ -64,16 +64,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border.light,
     paddingHorizontal: 12,
     height: 48,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.05)',
     elevation: 1,
   },
   focusedContainer: {
     borderColor: colors.brand.primary,
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
   },
   searchIcon: {
     marginRight: 8,

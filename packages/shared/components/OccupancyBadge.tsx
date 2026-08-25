@@ -30,7 +30,7 @@ const BAND_CONFIG: Record<OccupancyBand, {
   },
   MODERATE: {
     label: 'Moderate Crowd',
-    subtext: 'Seating mostly filled (40–48 pax)',
+    subtext: 'Seating mostly filled (40ï¿½48 pax)',
     dotColor: colors.occupancy.MODERATE.dot,
     bgColor: colors.occupancy.MODERATE.bg,
     textColor: colors.occupancy.MODERATE.text,
@@ -38,7 +38,7 @@ const BAND_CONFIG: Record<OccupancyBand, {
   },
   STANDING_ROOM: {
     label: 'Standing Room Only',
-    subtext: 'Seats filled, standing area active (48–55 pax)',
+    subtext: 'Seats filled, standing area active (48ï¿½55 pax)',
     dotColor: colors.occupancy.STANDING_ROOM.dot,
     bgColor: colors.occupancy.STANDING_ROOM.bg,
     textColor: colors.occupancy.STANDING_ROOM.text,
@@ -114,9 +114,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.04)',
     elevation: 1,
   },
   left: {

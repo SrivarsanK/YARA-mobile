@@ -1,4 +1,4 @@
-// packages/shared/theme/typography.ts — Font scales
+// packages/shared/theme/typography.ts ï¿½ Font scales
 // Matches web dashboard typography system
 
 import { Platform } from 'react-native';

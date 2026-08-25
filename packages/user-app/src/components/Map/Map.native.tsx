@@ -153,11 +153,8 @@ const styles = StyleSheet.create({
     borderColor: '#0284c7',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 2,
     boxShadow: '0px 1px 3px rgba(0,0,0,0.15)',
+    elevation: 2,
   },
   startStopDot: {
     backgroundColor: '#16A34A',

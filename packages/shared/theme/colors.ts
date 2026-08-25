@@ -1,4 +1,4 @@
-// packages/shared/theme/colors.ts — Design tokens
+// packages/shared/theme/colors.ts ï¿½ Design tokens
 // Matches web dashboard color system exactly
 
 export const colors = {
