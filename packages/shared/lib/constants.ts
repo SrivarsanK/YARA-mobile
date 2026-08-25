@@ -2,26 +2,28 @@
 // Mirror of Python shared/constants.py — LOCKED
 
 const getDefaultApiUrl = (): string => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
+  // On Web browser, always connect to the same host that served the page
   if (typeof window !== 'undefined' && window.location?.hostname) {
     return `http://${window.location.hostname}:8002`;
   }
-  return 'http://192.168.1.12:8002';
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  return 'http://172.16.8.126:8002';
 };
 
 const getDefaultSimUrl = (): string => {
-  if (process.env.EXPO_PUBLIC_SIM_URL) {
-    return process.env.EXPO_PUBLIC_SIM_URL;
-  }
+  // On Web browser, always connect to the same host that served the page
   if (typeof window !== 'undefined' && window.location?.hostname) {
     return `http://${window.location.hostname}:8001`;
   }
-  return 'http://192.168.1.12:8001';
+  if (process.env.EXPO_PUBLIC_SIM_URL) {
+    return process.env.EXPO_PUBLIC_SIM_URL;
+  }
+  return 'http://172.16.8.126:8001';
 };
 
-// Backend URLs — dynamically resolve env, browser host, or LAN IP
+// Backend URLs — dynamically resolve browser host, env, or active LAN IP
 export const API_BASE_URL = getDefaultApiUrl();
 export const SIM_BASE_URL = getDefaultSimUrl();
 
