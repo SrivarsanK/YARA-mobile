@@ -1,19 +1,38 @@
 // packages/user-app/src/components/Map/Map.web.tsx
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-import Svg, {
-  Circle,
-  Polyline,
-  G,
-  Text as SvgText,
-  Rect,
-  Path,
-  Defs,
-  LinearGradient,
-  Stop,
-} from 'react-native-svg';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet } from 'react-native';
 import type { MapViewProps } from './types';
 import { S26_CORRIDOR_STOPS } from '@yara/shared/lib/agencies';
+
+const loadLeafletFromCDN = (): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') return resolve(null);
+    if ((window as any).L) return resolve((window as any).L);
+
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+
+    const existingScript = document.getElementById('leaflet-js') as HTMLScriptElement;
+    if (existingScript) {
+      if ((window as any).L) return resolve((window as any).L);
+      existingScript.addEventListener('load', () => resolve((window as any).L));
+      existingScript.addEventListener('error', (e) => reject(e));
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = 'leaflet-js';
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload = () => resolve((window as any).L);
+    script.onerror = (e) => reject(e);
+    document.head.appendChild(script);
+  });
+};
 
 export const Map: React.FC<MapViewProps> = ({
   vehicleLat,
@@ -21,216 +40,199 @@ export const Map: React.FC<MapViewProps> = ({
   vehicleLeg,
   routeCode = 'S26',
   stops = S26_CORRIDOR_STOPS,
+  userLat,
+  userLon,
   onSelectStop,
 }) => {
-  // SVG Canvas dimensions
-  const svgWidth = 400;
-  const svgHeight = 400;
-  const padding = 45;
-
-  const [pulse, setPulse] = useState(0);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const busMarkerRef = useRef<any>(null);
+  const userMarkerRef = useRef<any>(null);
+  const polylineGlowRef = useRef<any>(null);
+  const polylineMainRef = useRef<any>(null);
+  const stopMarkersRef = useRef<any[]>([]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setPulse((prev) => (prev + 1) % 100);
-    }, 50);
-    return () => clearInterval(timer);
-  }, []);
+    if (typeof window === 'undefined' || !mapContainerRef.current) return;
 
-  // Bounding box calculation for coordinate transformation
-  const allLats = stops.map((s) => s.lat);
-  const allLons = stops.map((s) => s.lon);
-  if (vehicleLat) allLats.push(vehicleLat);
-  if (vehicleLon) allLons.push(vehicleLon);
+    let isMounted = true;
 
-  const minLat = Math.min(...allLats) - 0.003;
-  const maxLat = Math.max(...allLats) + 0.003;
-  const minLon = Math.min(...allLons) - 0.003;
-  const maxLon = Math.max(...allLons) + 0.003;
+    const initLeaflet = async () => {
+      try {
+        const L = await loadLeafletFromCDN();
 
-  const toX = (lon: number) => {
-    const range = maxLon - minLon || 0.01;
-    return padding + ((lon - minLon) / range) * (svgWidth - 2 * padding);
-  };
+        if (!isMounted || !mapContainerRef.current || !L) return;
 
-  const toY = (lat: number) => {
-    const range = maxLat - minLat || 0.01;
-    return svgHeight - padding - ((lat - minLat) / range) * (svgHeight - 2 * padding);
-  };
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.remove();
+          mapInstanceRef.current = null;
+        }
 
-  const polylinePoints = stops.map((s) => `${toX(s.lon).toFixed(1)},${toY(s.lat).toFixed(1)}`).join(' ');
+        const centerLat = userLat ?? vehicleLat ?? stops[0]?.lat ?? 13.0302;
+        const centerLon = userLon ?? vehicleLon ?? stops[0]?.lon ?? 80.1806;
 
-  const busX = toX(vehicleLon || stops[0]?.lon || 80.1806);
-  const busY = toY(vehicleLat || stops[0]?.lat || 13.0302);
+        // Initialize Leaflet Map
+        const map = L.map(mapContainerRef.current, {
+          center: [centerLat, centerLon],
+          zoom: 14,
+          zoomControl: false,
+          attributionControl: false,
+        });
 
-  const busColor =
-    vehicleLeg === 'outbound'
-      ? '#64748B' // desaturated slate
-      : vehicleLeg === 'dwell'
-      ? '#F59E0B' // amber
-      : '#0284C7'; // solid sky blue
+        // CartoDB Voyager Light Tiles (Authentic Web Dashboard Aesthetic)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          maxZoom: 19,
+          subdomains: 'abcd',
+        }).addTo(map);
 
-  const haloRadius = 14 + (pulse % 30) * 0.4;
-  const haloOpacity = Math.max(0, 0.5 - (pulse % 30) * 0.015);
+        // Route Polylines
+        const latLons = stops.map((s) => [s.lat, s.lon]);
+
+        if (latLons.length > 1) {
+          polylineGlowRef.current = L.polyline(latLons, {
+            color: '#f7a501',
+            weight: 10,
+            opacity: 0.35,
+            lineCap: 'round',
+            lineJoin: 'round',
+          }).addTo(map);
+
+          polylineMainRef.current = L.polyline(latLons, {
+            color: '#0284c7',
+            weight: 5,
+            opacity: 0.95,
+            lineCap: 'round',
+            lineJoin: 'round',
+          }).addTo(map);
+        }
+
+        // Stop Markers (Numbered 1..N)
+        stopMarkersRef.current = stops.map((s, idx) => {
+          const isStart = idx === 0;
+          const isEnd = idx === stops.length - 1;
+          const bgColor = isStart ? '#16a34a' : isEnd ? '#dc2626' : '#ffffff';
+          const textColor = isStart || isEnd ? '#ffffff' : '#0284c7';
+
+          const stopIcon = L.divIcon({
+            className: '',
+            html: `
+              <div style="
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: ${bgColor};
+                border: 2px solid ${isStart || isEnd ? '#ffffff' : '#0284c7'};
+                box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 800;
+                font-size: 10px;
+                color: ${textColor};
+                cursor: pointer;
+                user-select: none;
+              ">
+                ${idx + 1}
+              </div>
+            `,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          });
+
+          const marker = L.marker([s.lat, s.lon], { icon: stopIcon }).addTo(map);
+          marker.bindTooltip(s.name, { direction: 'top', offset: [0, -12] });
+          marker.on('click', () => onSelectStop?.(s));
+          return marker;
+        });
+
+        // User GPS Beacon
+        if (userLat && userLon) {
+          const userIcon = L.divIcon({
+            className: '',
+            html: `
+              <div style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+                <div style="position:absolute;inset:0;border-radius:50%;background:rgba(16,185,129,0.25);animation:ping 2s cubic-bezier(0,0,0.2,1) infinite;"></div>
+                <div style="width:20px;height:20px;border-radius:50%;background:#10b981;border:3px solid #ffffff;box-shadow:0 2px 8px rgba(16,185,129,0.4);"></div>
+              </div>
+            `,
+            iconSize: [36, 36],
+            iconAnchor: [18, 18],
+          });
+          userMarkerRef.current = L.marker([userLat, userLon], { icon: userIcon, zIndexOffset: 800 }).addTo(map);
+        }
+
+        // Live Bus Marker with Pulsing Halo
+        const vLat = vehicleLat || stops[0]?.lat || 13.0302;
+        const vLon = vehicleLon || stops[0]?.lon || 80.1806;
+
+        const busIcon = L.divIcon({
+          className: '',
+          html: `
+            <div style="position:relative;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">
+              <div style="position:absolute;inset:0;border-radius:50%;background:rgba(247,165,1,0.35);animation:ping 2s cubic-bezier(0,0,0.2,1) infinite;"></div>
+              <div style="position:relative;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg, #f7a501, #ea580c);border:3px solid #ffffff;box-shadow:0 4px 12px rgba(247,165,1,0.4);display:flex;align-items:center;justify-content:center;">
+                <span style="color:#ffffff;font-size:16px;">🚌</span>
+              </div>
+              <div style="position:absolute;top:-18px;background:#0f172a;border:1px solid #f7a501;color:#ffffff;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:900;letter-spacing:0.4px;white-space:nowrap;">
+                ${routeCode}
+              </div>
+            </div>
+          `,
+          iconSize: [44, 44],
+          iconAnchor: [22, 22],
+        });
+
+        busMarkerRef.current = L.marker([vLat, vLon], { icon: busIcon, zIndexOffset: 1000 }).addTo(map);
+
+        // Fit bounds to show route
+        if (latLons.length > 0) {
+          map.fitBounds(L.latLngBounds(latLons), { padding: [40, 40] });
+        }
+
+        mapInstanceRef.current = map;
+      } catch (err) {
+        console.warn('Leaflet map initialization error:', err);
+      }
+    };
+
+    initLeaflet();
+
+    return () => {
+      isMounted = false;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [stops, routeCode, userLat, userLon]);
+
+  // Update live vehicle marker position
+  useEffect(() => {
+    if (busMarkerRef.current && vehicleLat && vehicleLon) {
+      busMarkerRef.current.setLatLng([vehicleLat, vehicleLon]);
+    }
+  }, [vehicleLat, vehicleLon]);
+
+  // Update user GPS location
+  useEffect(() => {
+    if (userMarkerRef.current && userLat && userLon) {
+      userMarkerRef.current.setLatLng([userLat, userLon]);
+    }
+  }, [userLat, userLon]);
 
   return (
     <View style={styles.container}>
-      {/* Top Map Label */}
-      <View style={styles.watermarkContainer}>
-        <Text style={styles.watermarkCity}>CHENNAI MTC CORRIDOR</Text>
-        <Text style={styles.watermarkRoute}>Route {routeCode} | Live Telemetry</Text>
-      </View>
-
-      <Svg
-        width="100%"
-        height="100%"
-        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-        style={styles.svg}
-      >
-        <Defs>
-          <LinearGradient id="webBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor="#F8FAFC" />
-            <Stop offset="100%" stopColor="#F1F5F9" />
-          </LinearGradient>
-        </Defs>
-
-        {/* Light Map Background */}
-        <Rect width={svgWidth} height={svgHeight} fill="url(#webBgGrad)" rx={12} />
-
-        {/* Road Grid Pattern */}
-        {[80, 160, 240, 320].map((pos) => (
-          <G key={`grid-${pos}`} opacity={0.35}>
-            <Path d={`M ${pos} 0 L ${pos} ${svgHeight}`} stroke="#E2E8F0" strokeWidth={1} strokeDasharray="4,4" />
-            <Path d={`M 0 ${pos} L ${svgWidth} ${pos}`} stroke="#E2E8F0" strokeWidth={1} strokeDasharray="4,4" />
-          </G>
-        ))}
-
-        {/* Outer Gold Glow Line (matches web CartoDB Voyager glow) */}
-        {stops.length > 1 && (
-          <Polyline
-            points={polylinePoints}
-            fill="none"
-            stroke="#F7A501"
-            strokeWidth={10}
-            strokeOpacity={0.35}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        )}
-
-        {/* Core Blue Route Line */}
-        {stops.length > 1 && (
-          <Polyline
-            points={polylinePoints}
-            fill="none"
-            stroke="#0284C7"
-            strokeWidth={4.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        )}
-
-        {/* Stops Numbered Circles & Labels */}
-        {stops.map((stop, idx) => {
-          const sx = toX(stop.lon);
-          const sy = toY(stop.lat);
-          const isStart = idx === 0;
-          const isEnd = idx === stops.length - 1;
-
-          return (
-            <G key={stop.id || `stop-${idx}`}>
-              {/* Outer circle */}
-              <Circle
-                cx={sx}
-                cy={sy}
-                r={isStart || isEnd ? 9 : 7}
-                fill={isStart ? '#16A34A' : isEnd ? '#DC2626' : '#FFFFFF'}
-                stroke={isStart || isEnd ? '#FFFFFF' : '#0284C7'}
-                strokeWidth={2}
-              />
-              {/* Number inside */}
-              <SvgText
-                x={sx}
-                y={sy + 3}
-                fill={isStart || isEnd ? '#FFFFFF' : '#0284C7'}
-                fontSize={7}
-                fontWeight="900"
-                textAnchor="middle"
-              >
-                {idx + 1}
-              </SvgText>
-
-              {/* Stop Name text */}
-              {(isStart || isEnd || idx % 4 === 0) && (
-                <SvgText
-                  x={sx}
-                  y={sy - 12}
-                  fill="#475569"
-                  fontSize={8.5}
-                  fontWeight="800"
-                  textAnchor="middle"
-                >
-                  {stop.name.length > 14 ? stop.name.substring(0, 12) + '...' : stop.name}
-                </SvgText>
-              )}
-            </G>
-          );
-        })}
-
-        {/* Live Bus Marker */}
-        <G transform={`translate(${busX}, ${busY})`}>
-          {/* Pulsing Halo */}
-          <Circle
-            cx={0}
-            cy={0}
-            r={haloRadius}
-            fill="#F7A501"
-            opacity={haloOpacity}
-          />
-
-          {/* Outer Ring */}
-          <Circle
-            cx={0}
-            cy={0}
-            r={15}
-            fill={busColor}
-            stroke="#FFFFFF"
-            strokeWidth={2.5}
-          />
-
-          {/* Bus Glyph Shape inside */}
-          <G transform="translate(-7, -7) scale(0.7)">
-            <Path
-              d="M 4 2 L 16 2 C 18 2 19 3 19 5 L 19 16 C 19 18 18 19 16 19 L 4 19 C 2 19 1 18 1 16 L 1 5 C 1 3 2 2 4 2 Z M 3 7 L 17 7 M 3 13 L 17 13 M 5 16 A 1.5 1.5 0 1 0 5 13 A 1.5 1.5 0 1 0 5 16 Z M 15 16 A 1.5 1.5 0 1 0 15 13 A 1.5 1.5 0 1 0 15 16 Z"
-              fill="#FFFFFF"
-            />
-          </G>
-
-          {/* Floating Route Pill */}
-          <G transform="translate(0, -24)">
-            <Rect
-              x={-20}
-              y={-9}
-              width={40}
-              height={16}
-              rx={6}
-              fill="#0F172A"
-              stroke="#F7A501"
-              strokeWidth={1}
-            />
-            <SvgText
-              x={0}
-              y={3}
-              fill="#FFFFFF"
-              fontSize={8.5}
-              fontWeight="900"
-              textAnchor="middle"
-            >
-              {routeCode}
-            </SvgText>
-          </G>
-        </G>
-      </Svg>
+      <div
+        ref={mapContainerRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          minHeight: '260px',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          backgroundColor: '#f6f4eb',
+        }}
+      />
     </View>
   );
 };
@@ -238,38 +240,11 @@ export const Map: React.FC<MapViewProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    overflow: 'hidden',
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  watermarkContainer: {
-    position: 'absolute',
-    top: 10,
-    left: 12,
-    zIndex: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  watermarkCity: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: '#0284C7',
-    letterSpacing: 0.5,
-  },
-  watermarkRoute: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  svg: {
     width: '100%',
     height: '100%',
+    minHeight: 260,
+    backgroundColor: '#F6F4EB',
+    borderRadius: 16,
+    overflow: 'hidden',
   },
 });

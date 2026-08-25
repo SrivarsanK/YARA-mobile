@@ -8,6 +8,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ImageBackground,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -165,6 +166,7 @@ export const LiveMapScreen: React.FC = () => {
     <ImageBackground
       source={require('../../assets/transit-bg-pattern.jpg')}
       style={[styles.container, { paddingTop: insets.top }]}
+      imageStyle={Platform.OS === 'web' ? { display: 'none' } : { opacity: 0.85 }}
       resizeMode="repeat"
     >
       {/* ── Top Navigation & Search Header ───────────────────────────────── */}
