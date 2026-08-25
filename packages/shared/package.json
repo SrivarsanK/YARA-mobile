@@ -5,6 +5,10 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "expo-location": "~57.0.13",
+    "react-native-sse": "~1.0.1"
+  },
   "peerDependencies": {
     "react": "*",
     "react-native": "*"
