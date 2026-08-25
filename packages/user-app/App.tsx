@@ -1,19 +1,20 @@
 import React from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { TransitProvider } from './src/context/TransitContext';
 import { RoutesProvider } from './src/context/RoutesContext';
 import { colors } from '@yara/shared';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 export default function App() {
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <TransitProvider>
         <RoutesProvider>
           <RootNavigator />
         </RoutesProvider>
       </TransitProvider>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 

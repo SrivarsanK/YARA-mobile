@@ -1,7 +1,7 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { TransitSnapshot, useTransitStream } from '@yara/shared';
 
-interface TransitContextValue {
+export interface TransitContextValue {
   data: TransitSnapshot | null;
   isConnected: boolean;
   error: string | null;
@@ -15,6 +15,7 @@ interface TransitProviderProps {
 
 export const TransitProvider: React.FC<TransitProviderProps> = ({ children }) => {
   const { data, isConnected, error } = useTransitStream();
+
   const value: TransitContextValue = {
     data,
     isConnected,
