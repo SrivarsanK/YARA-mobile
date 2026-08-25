@@ -7,7 +7,13 @@
     "noImplicitAny": true,
     "declaration": true,
     "outDir": "dist",
-    "jsx": "react-native"
+    "jsx": "react-native",
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "types": ["node"]
   },
-  "include": ["lib/**/*", "hooks/**/*", "components/**/*", "services/**/*"]
+  "include": ["lib/**/*", "hooks/**/*", "components/**/*", "services/**/*", "theme/**/*"]
 }
