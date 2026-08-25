@@ -1,4 +1,4 @@
-﻿// packages/user-app/src/screens/LiveMapScreen.tsx
+// packages/user-app/src/screens/LiveMapScreen.tsx
 import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
@@ -24,7 +24,7 @@ import { AGENCY_PRESETS, AgencyPreset, S26_CORRIDOR_STOPS } from '@yara/shared/l
 
 export const LiveMapScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const { data, isConnected } = useTransit();
+  const { data, isConnected, isMockFallback, reconnectAttempts, error } = useTransit();
   const [selectedAgency, setSelectedAgency] = useState<AgencyPreset>(AGENCY_PRESETS[0]);
   const [isAgencyModalOpen, setIsAgencyModalOpen] = useState<boolean>(false);
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -55,6 +55,9 @@ export const LiveMapScreen: React.FC = () => {
       <LiveMapHeader
         selectedAgency={selectedAgency}
         isConnected={isConnected}
+        isMockFallback={isMockFallback}
+        reconnectAttempts={reconnectAttempts}
+        error={error}
         onOpenAgencySelector={() => setIsAgencyModalOpen(true)}
         routeCode="S26"
         legStateText={legStateLabel}

@@ -5,6 +5,8 @@ export interface TransitContextValue {
   data: TransitSnapshot | null;
   isConnected: boolean;
   error: string | null;
+  isMockFallback: boolean;
+  reconnectAttempts: number;
 }
 
 const TransitContext = createContext<TransitContextValue | null>(null);
@@ -14,12 +16,14 @@ interface TransitProviderProps {
 }
 
 export const TransitProvider: React.FC<TransitProviderProps> = ({ children }) => {
-  const { data, isConnected, error } = useTransitStream();
+  const { data, isConnected, error, isMockFallback, reconnectAttempts } = useTransitStream();
 
   const value: TransitContextValue = {
     data,
     isConnected,
     error,
+    isMockFallback,
+    reconnectAttempts,
   };
 
   return <TransitContext.Provider value={value}>{children}</TransitContext.Provider>;
