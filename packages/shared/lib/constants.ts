@@ -1,9 +1,29 @@
-﻿// packages/shared/lib/constants.ts
+// packages/shared/lib/constants.ts
 // Mirror of Python shared/constants.py — LOCKED
 
-// Backend URLs — set via environment variables
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.1.100:8002';
-export const SIM_BASE_URL = process.env.EXPO_PUBLIC_SIM_URL ?? 'http://192.168.1.100:8001';
+const getDefaultApiUrl = (): string => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    return `http://${window.location.hostname}:8002`;
+  }
+  return 'http://192.168.1.12:8002';
+};
+
+const getDefaultSimUrl = (): string => {
+  if (process.env.EXPO_PUBLIC_SIM_URL) {
+    return process.env.EXPO_PUBLIC_SIM_URL;
+  }
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    return `http://${window.location.hostname}:8001`;
+  }
+  return 'http://192.168.1.12:8001';
+};
+
+// Backend URLs — dynamically resolve env, browser host, or LAN IP
+export const API_BASE_URL = getDefaultApiUrl();
+export const SIM_BASE_URL = getDefaultSimUrl();
 
 // Transit constants (from shared/constants.py)
 export const BLOCK_ID = 'block_001';
