@@ -10,6 +10,7 @@ export * from './hooks/useTransitStream';
 export * from './hooks/useNeonRoutes';
 export * from './hooks/useLocation';
 export * from './hooks/useCountdown';
+export * from './hooks/useDebounce';
 
 // Components
 export * from './components/OccupancyBadge';
