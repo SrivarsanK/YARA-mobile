@@ -1,5 +1,5 @@
 // packages/user-app/src/components/Map/Map.web.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import Svg, {
   Circle,
@@ -12,18 +12,8 @@ import Svg, {
   LinearGradient,
   Stop,
 } from 'react-native-svg';
-import Animated, {
-  useSharedValue,
-  useAnimatedProps,
-  withRepeat,
-  withSequence,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
 import type { MapViewProps } from './types';
 import { S26_CORRIDOR_STOPS } from '@yara/shared/lib/agencies';
-
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export const Map: React.FC<MapViewProps> = ({
   vehicleLat,
@@ -37,6 +27,15 @@ export const Map: React.FC<MapViewProps> = ({
   const svgWidth = 400;
   const svgHeight = 400;
   const padding = 45;
+
+  const [pulse, setPulse] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPulse((prev) => (prev + 1) % 100);
+    }, 50);
+    return () => clearInterval(timer);
+  }, []);
 
   // Bounding box calculation for coordinate transformation
   const allLats = stops.map((s) => s.lat);
@@ -56,7 +55,6 @@ export const Map: React.FC<MapViewProps> = ({
 
   const toY = (lat: number) => {
     const range = maxLat - minLat || 0.01;
-    // Invert Y coordinate so North is up
     return svgHeight - padding - ((lat - minLat) / range) * (svgHeight - 2 * padding);
   };
 
@@ -65,59 +63,22 @@ export const Map: React.FC<MapViewProps> = ({
   const busX = toX(vehicleLon || stops[0]?.lon || 80.1806);
   const busY = toY(vehicleLat || stops[0]?.lat || 13.0302);
 
-  // Pulsing animations
-  const pulseScale = useSharedValue(1);
-  const pulseOpacity = useSharedValue(0.5);
-  const dwellOpacity = useSharedValue(1);
-
-  useEffect(() => {
-    pulseScale.value = withRepeat(
-      withTiming(2.2, { duration: 1600, easing: Easing.out(Easing.ease) }),
-      -1,
-      false
-    );
-    pulseOpacity.value = withRepeat(
-      withTiming(0, { duration: 1600, easing: Easing.out(Easing.ease) }),
-      -1,
-      false
-    );
-  }, []);
-
-  useEffect(() => {
-    if (vehicleLeg === 'dwell') {
-      dwellOpacity.value = withRepeat(
-        withSequence(
-          withTiming(0.4, { duration: 500 }),
-          withTiming(1, { duration: 500 })
-        ),
-        -1,
-        true
-      );
-    } else {
-      dwellOpacity.value = 1;
-    }
-  }, [vehicleLeg]);
-
-  const haloProps = useAnimatedProps(() => ({
-    r: 12 * pulseScale.value,
-    opacity: pulseOpacity.value,
-  }));
-
   const busColor =
     vehicleLeg === 'outbound'
       ? '#64748B' // desaturated slate
       : vehicleLeg === 'dwell'
       ? '#F59E0B' // amber
-      : '#2563EB'; // solid blue
+      : '#0284C7'; // solid sky blue
 
-  const busOpacity = vehicleLeg === 'outbound' ? 0.6 : 1;
+  const haloRadius = 14 + (pulse % 30) * 0.4;
+  const haloOpacity = Math.max(0, 0.5 - (pulse % 30) * 0.015);
 
   return (
     <View style={styles.container}>
-      {/* City & Route Watermark */}
+      {/* Top Map Label */}
       <View style={styles.watermarkContainer}>
         <Text style={styles.watermarkCity}>CHENNAI MTC CORRIDOR</Text>
-        <Text style={styles.watermarkRoute}>Route {routeCode} | Live Simulation</Text>
+        <Text style={styles.watermarkRoute}>Route {routeCode} | Live Telemetry</Text>
       </View>
 
       <Svg
@@ -127,52 +88,49 @@ export const Map: React.FC<MapViewProps> = ({
         style={styles.svg}
       >
         <Defs>
-          <LinearGradient id="routeGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#3B82F6" stopOpacity="0.4" />
-            <Stop offset="100%" stopColor="#1D4ED8" stopOpacity="0.4" />
-          </LinearGradient>
-          <LinearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor="#0B1120" />
-            <Stop offset="100%" stopColor="#0F172A" />
+          <LinearGradient id="webBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor="#F8FAFC" />
+            <Stop offset="100%" stopColor="#F1F5F9" />
           </LinearGradient>
         </Defs>
 
-        {/* Map Background */}
-        <Rect width={svgWidth} height={svgHeight} fill="url(#bgGradient)" />
+        {/* Light Map Background */}
+        <Rect width={svgWidth} height={svgHeight} fill="url(#webBgGrad)" rx={12} />
 
-        {/* Subtle Grid Lines */}
+        {/* Road Grid Pattern */}
         {[80, 160, 240, 320].map((pos) => (
-          <G key={`grid-${pos}`} opacity={0.15}>
-            <Path d={`M ${pos} 0 L ${pos} ${svgHeight}`} stroke="#38BDF8" strokeWidth={0.5} strokeDasharray="3,3" />
-            <Path d={`M 0 ${pos} L ${svgWidth} ${pos}`} stroke="#38BDF8" strokeWidth={0.5} strokeDasharray="3,3" />
+          <G key={`grid-${pos}`} opacity={0.35}>
+            <Path d={`M ${pos} 0 L ${pos} ${svgHeight}`} stroke="#E2E8F0" strokeWidth={1} strokeDasharray="4,4" />
+            <Path d={`M 0 ${pos} L ${svgWidth} ${pos}`} stroke="#E2E8F0" strokeWidth={1} strokeDasharray="4,4" />
           </G>
         ))}
 
-        {/* Outer Glow Line */}
+        {/* Outer Gold Glow Line (matches web CartoDB Voyager glow) */}
         {stops.length > 1 && (
           <Polyline
             points={polylinePoints}
             fill="none"
-            stroke="url(#routeGlow)"
+            stroke="#F7A501"
             strokeWidth={10}
+            strokeOpacity={0.35}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         )}
 
-        {/* Core Route Line */}
+        {/* Core Blue Route Line */}
         {stops.length > 1 && (
           <Polyline
             points={polylinePoints}
             fill="none"
-            stroke="#3B82F6"
-            strokeWidth={4}
+            stroke="#0284C7"
+            strokeWidth={4.5}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         )}
 
-        {/* Stops Circles & Labels */}
+        {/* Stops Numbered Circles & Labels */}
         {stops.map((stop, idx) => {
           const sx = toX(stop.lon);
           const sy = toY(stop.lat);
@@ -181,22 +139,35 @@ export const Map: React.FC<MapViewProps> = ({
 
           return (
             <G key={stop.id || `stop-${idx}`}>
+              {/* Outer circle */}
               <Circle
                 cx={sx}
                 cy={sy}
-                r={isStart || isEnd ? 7 : 4}
+                r={isStart || isEnd ? 9 : 7}
                 fill={isStart ? '#16A34A' : isEnd ? '#DC2626' : '#FFFFFF'}
-                stroke={isStart || isEnd ? '#FFFFFF' : '#0284c7'}
+                stroke={isStart || isEnd ? '#FFFFFF' : '#0284C7'}
                 strokeWidth={2}
-                onPress={() => onSelectStop?.(stop)}
               />
+              {/* Number inside */}
+              <SvgText
+                x={sx}
+                y={sy + 3}
+                fill={isStart || isEnd ? '#FFFFFF' : '#0284C7'}
+                fontSize={7}
+                fontWeight="900"
+                textAnchor="middle"
+              >
+                {idx + 1}
+              </SvgText>
+
+              {/* Stop Name text */}
               {(isStart || isEnd || idx % 4 === 0) && (
                 <SvgText
                   x={sx}
-                  y={sy - 10}
-                  fill="#94A3B8"
-                  fontSize={8}
-                  fontWeight="bold"
+                  y={sy - 12}
+                  fill="#475569"
+                  fontSize={8.5}
+                  fontWeight="800"
                   textAnchor="middle"
                 >
                   {stop.name.length > 14 ? stop.name.substring(0, 12) + '...' : stop.name}
@@ -208,27 +179,27 @@ export const Map: React.FC<MapViewProps> = ({
 
         {/* Live Bus Marker */}
         <G transform={`translate(${busX}, ${busY})`}>
-          {/* Animated Halo */}
-          <AnimatedCircle
+          {/* Pulsing Halo */}
+          <Circle
             cx={0}
             cy={0}
-            animatedProps={haloProps}
-            fill={busColor}
+            r={haloRadius}
+            fill="#F7A501"
+            opacity={haloOpacity}
           />
 
           {/* Outer Ring */}
           <Circle
             cx={0}
             cy={0}
-            r={14}
+            r={15}
             fill={busColor}
-            opacity={busOpacity}
             stroke="#FFFFFF"
             strokeWidth={2.5}
           />
 
           {/* Bus Glyph Shape inside */}
-          <G transform="translate(-6, -6) scale(0.6)" opacity={busOpacity}>
+          <G transform="translate(-7, -7) scale(0.7)">
             <Path
               d="M 4 2 L 16 2 C 18 2 19 3 19 5 L 19 16 C 19 18 18 19 16 19 L 4 19 C 2 19 1 18 1 16 L 1 5 C 1 3 2 2 4 2 Z M 3 7 L 17 7 M 3 13 L 17 13 M 5 16 A 1.5 1.5 0 1 0 5 13 A 1.5 1.5 0 1 0 5 16 Z M 15 16 A 1.5 1.5 0 1 0 15 13 A 1.5 1.5 0 1 0 15 16 Z"
               fill="#FFFFFF"
@@ -236,22 +207,22 @@ export const Map: React.FC<MapViewProps> = ({
           </G>
 
           {/* Floating Route Pill */}
-          <G transform="translate(0, -22)">
+          <G transform="translate(0, -24)">
             <Rect
-              x={-18}
-              y={-8}
-              width={36}
-              height={14}
-              rx={4}
-              fill="#FFFFFF"
-              stroke={busColor}
+              x={-20}
+              y={-9}
+              width={40}
+              height={16}
+              rx={6}
+              fill="#0F172A"
+              stroke="#F7A501"
               strokeWidth={1}
             />
             <SvgText
               x={0}
-              y={2}
-              fill={busColor}
-              fontSize={8}
+              y={3}
+              fill="#FFFFFF"
+              fontSize={8.5}
               fontWeight="900"
               textAnchor="middle"
             >
@@ -267,36 +238,38 @@ export const Map: React.FC<MapViewProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    overflow: 'hidden',
     position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  watermarkContainer: {
+    position: 'absolute',
+    top: 10,
+    left: 12,
+    zIndex: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  watermarkCity: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#0284C7',
+    letterSpacing: 0.5,
+  },
+  watermarkRoute: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#0F172A',
   },
   svg: {
     width: '100%',
     height: '100%',
-  },
-  watermarkContainer: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    zIndex: 10,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  watermarkCity: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#38BDF8',
-    letterSpacing: 1,
-  },
-  watermarkRoute: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#E2E8F0',
   },
 });
