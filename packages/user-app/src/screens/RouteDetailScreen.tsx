@@ -283,7 +283,8 @@ export const RouteDetailScreen: React.FC = () => {
     }
     return stops[stops.length - 1]?.stop_name || 'Valasaravakkam';
   }, [currentRouteMeta, stops]);
-﻿  // Render header above the stops timeline FlatList
+
+  // Render header above the stops timeline FlatList
   const renderListHeader = () => (
     <View style={styles.headerStack}>
       {/* Interactive Map Section */}
@@ -561,7 +562,8 @@ export const RouteDetailScreen: React.FC = () => {
       </TouchableOpacity>
     );
   };
-﻿  return (
+
+  return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Top App Header */}
       <View style={styles.topHeader}>
