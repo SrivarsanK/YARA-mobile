@@ -1,4 +1,4 @@
-﻿// packages/user-app/src/screens/SearchScreen.tsx
+// packages/user-app/src/screens/SearchScreen.tsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
@@ -606,11 +606,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
     gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.04)',
     zIndex: 10,
   },
   titleRow: {
@@ -704,11 +700,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     paddingVertical: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 4,
+    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.08)',
     zIndex: 20,
   },
   autocompleteRow: {
@@ -781,11 +773,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.03)',
   },
   sectionHeader: {
     flexDirection: 'row',

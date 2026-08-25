@@ -17,11 +17,6 @@ import {
   Bus,
   Navigation,
   MapPin,
-  Clock,
-  Sparkles,
-  ChevronRight,
-  ShieldCheck,
-  Radio,
 } from 'lucide-react-native';
 import {
   ETACountdown,
@@ -168,7 +163,7 @@ export const LiveMapScreen: React.FC = () => {
 
   return (
     <ImageBackground
-      source={require('../../assets/transit-bg-pattern.png')}
+      source={require('../../assets/transit-bg-pattern.jpg')}
       style={[styles.container, { paddingTop: insets.top }]}
       resizeMode="repeat"
     >
@@ -415,7 +410,7 @@ const styles = StyleSheet.create({
 
   // ── Active Routes Horizontal Strip ───────────────────────────────────────
   routeStripContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.75)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
     paddingVertical: 8,
@@ -445,10 +440,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     minWidth: 140,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 3,
-    elevation: 1,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
   },
   routeCardActive: {
     backgroundColor: '#FEF3C7',
@@ -497,10 +489,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#CBD5E1',
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
   },
   mapHeaderRow: {
     flexDirection: 'row',
@@ -575,11 +564,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: -4 },
-    elevation: 12,
+    boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.12)',
   },
   handleIndicator: {
     backgroundColor: '#CBD5E1',
@@ -680,10 +665,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOpacity: 0.02,
-    shadowRadius: 3,
-    elevation: 1,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
   },
   arrivalBusIconBox: {
     width: 36,

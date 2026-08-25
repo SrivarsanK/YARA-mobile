@@ -1,4 +1,4 @@
-﻿// packages/user-app/src/screens/RoutesScreen.tsx
+// packages/user-app/src/screens/RoutesScreen.tsx
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -352,11 +352,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
   },
   feedCard: {
     flexDirection: 'row',
@@ -367,11 +363,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.03)',
   },
   feedCardLeft: {
     flexDirection: 'row',

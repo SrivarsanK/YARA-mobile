@@ -1,4 +1,4 @@
-﻿// packages/user-app/src/screens/RouteDetailScreen.tsx
+// packages/user-app/src/screens/RouteDetailScreen.tsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   DimensionValue,
@@ -755,11 +755,7 @@ export const RouteDetailScreen: React.FC = () => {
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
   },
   backButton: {
     width: 36,
@@ -843,10 +839,7 @@ export const RouteDetailScreen: React.FC = () => {
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
   },
   mapLiveText: {
     fontSize: 10,
@@ -871,11 +864,7 @@ export const RouteDetailScreen: React.FC = () => {
   },
   segmentBtnActive: {
     backgroundColor: '#F7A501',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
   },
   segmentText: {
     fontSize: 12,
@@ -893,11 +882,7 @@ export const RouteDetailScreen: React.FC = () => {
     borderColor: '#E2E8F0',
     padding: 14,
     gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.03)',
   },
   overviewTopRow: {
     flexDirection: 'row',
@@ -1053,10 +1038,7 @@ export const RouteDetailScreen: React.FC = () => {
     borderColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#2563EB',
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    elevation: 3,
+    boxShadow: '0 2px 6px rgba(37, 99, 235, 0.4)',
   },
   startNode: {
     width: 12,
@@ -1145,11 +1127,7 @@ export const RouteDetailScreen: React.FC = () => {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
   },
   stopExpandedLeft: {
     flex: 1,
@@ -1199,10 +1177,7 @@ export const RouteDetailScreen: React.FC = () => {
     borderRadius: 24,
     padding: 20,
     gap: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 10,
+    boxShadow: '0 8px 30px rgba(0, 0, 0, 0.2)',
   },
   modalHeader: {
     flexDirection: 'row',

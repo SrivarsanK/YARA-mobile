@@ -80,11 +80,7 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
     paddingTop: 6,
     height: 64,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: -2 },
-    elevation: 8,
+    boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.05)',
   },
   tabItem: {
     paddingVertical: 2,

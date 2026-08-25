@@ -1,4 +1,4 @@
-﻿// packages/user-app/src/components/AgencySelectorModal.tsx
+// packages/user-app/src/components/AgencySelectorModal.tsx
 import React from 'react';
 import {
   View,
@@ -147,10 +147,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     padding: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
+    boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
   },
   header: {
     flexDirection: 'row',
